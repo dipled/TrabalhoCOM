@@ -79,7 +79,7 @@ constT = try (do {n <- intOrDouble; case n of
                                   Left num -> return (Const (CInt num))
                                   Right num -> return (Const (CDouble num)) })
          <|> try (do {lit <- literalString; return (Lit lit)})
-         <|> try (do {id <- identifier; exs <- many1 expr; return (Chamada id exs)})
+         <|> try (do {id <- identifier; exs <- many1 expr; return (Chamada id exs)}) --esse many1 pode vir a virar many futuramente
          <|> try (do {id <- identifier; return (IdVar id)})
 
 

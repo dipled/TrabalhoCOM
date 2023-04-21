@@ -2,4 +2,4 @@
 Comentarios absurdos feito por pessoas loucas
 hahahahahaha
 -}
-f (a 2) == 4
+f (a 2) (b) == 4
