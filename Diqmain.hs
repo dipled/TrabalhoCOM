@@ -79,8 +79,8 @@ constT = try (do {n <- intOrDouble; case n of
                                   Left num -> return (Const (CInt num))
                                   Right num -> return (Const (CDouble num)) })
          <|> try (do {lit <- literalString; return (Lit lit)})
-         <|> try (do {id <- identifier; exs <- expr; return (Chamada id [exs])})
-         <|> do {id <- identifier; return (IdVar id)}
+         <|> try (do {id <- identifier; exs <- many1 expr; return (Chamada id exs)})
+         <|> try (do {id <- identifier; return (IdVar id)})
 
 
 fator = parens expr
@@ -90,7 +90,9 @@ fator = parens expr
 
 expr = buildExpressionParser tabela fator
        <?> "expression" 
-  
+
+
+
 
 -- *********************************************************************
 -- ExprR

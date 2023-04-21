@@ -2,4 +2,4 @@
 Comentarios absurdos feito por pessoas loucas
 hahahahahaha
 -}
-funcao (sin(b / 1))
+f (a 2) == 4
