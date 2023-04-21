@@ -1,3 +1,3 @@
 # TrabalhoCOM
 
-Compilador feito em Haskell, utilizando a biblioteca Parsec
+Compilador feito em Haskell, utilizando a biblioteca Parsec.
