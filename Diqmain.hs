@@ -105,5 +105,5 @@ parserExpr s = case parserE s of
 
 main = do 
           putStr "Expressao:"
-          e <- getLine
+          e <- readFile "arq.txt"
           parserExpr e

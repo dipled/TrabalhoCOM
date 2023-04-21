@@ -1,0 +1,5 @@
+1 + 1 > 2 + 2
+{-
+Comentarios absurdos feito por pessoas loucas
+hahahahahaha
+-}
