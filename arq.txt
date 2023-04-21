@@ -2,4 +2,4 @@
 Comentarios absurdos feito por pessoas loucas
 hahahahahaha
 -}
-1 + 1 
+funcao (sin(b / 1))
