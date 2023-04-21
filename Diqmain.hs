@@ -11,6 +11,7 @@ import Text.Parsec.Expr
 import Text.Parsec.Language
 import Text.Parsec.Token qualified as T
 import GHC.Generics (Associativity(NotAssociative))
+import Text.Parsec.Token (GenLanguageDef(identLetter))
 
 
 lingDef =
@@ -32,13 +33,16 @@ lingDef =
           "&&",
           "||",
           "~",
-          "#"
+          "#",
+          "->",
+          ":="
         ],
         T.identStart      = letter <|> char '_',
         T.identLetter     = alphaNum <|> char '_',
         T.reservedNames = 
           [
-            "TInt", "TDouble", "TString", "TVoid"
+            "int", "double", "string", "void",
+            "read", "print", "return", "if", "while", "main"
           ]
     }
 
@@ -56,9 +60,15 @@ identifier = T.identifier lexico
 
 literalString = T.stringLiteral lexico
 
+reserved = T.reserved lexico
+
 comment = T.whiteSpace lexico
 
+braces = T.braces lexico
 
+angles = T.angles lexico
+
+brackets = T.brackets lexico
 -- *********************************************************************
 -- Expr
 -- *********************************************************************
@@ -90,7 +100,6 @@ fator = parens expr
 
 expr = buildExpressionParser tabela fator
        <?> "expression" 
-
 
 
 
@@ -138,14 +147,140 @@ exprL = buildExpressionParser tabelaL fatorL
 
 
 -- *********************************************************************
+-- Var declaration and func
+-- *********************************************************************
+
+
+typeAssert = 
+  do reserved "int"; return TInt
+  <|> do reserved "double"; return TDouble
+  <|> do reserved "string"; return TString
+  <|> do reserved "void"; return TVoid
+
+
+varDecOp = do {reservedOp "#"; return (:#:)}
+
+
+varDec = 
+  do
+    id <- identifier
+    o <- varDecOp
+    t <- typeAssert
+    return (o id t)
+
+
+funOp = do{reservedOp "->"; return (:->:)}
+
+funDec = 
+  do
+    id <- identifier
+    o <- funOp 
+    vars <- parens (many varDec)
+    t <-typeAssert
+    return (o id (vars, t))
+
+
+-- *********************************************************************
+-- Commands
+-- *********************************************************************
+
+atribOp = do{reservedOp ":="; return Atrib}
+
+atrib = 
+  do
+    id <- identifier
+    o <- atribOp
+    e <- expr
+    return (o id e)
+
+
+readCmd = do reserved "read" ; return Leitura
+
+readSomething = 
+  do
+    rd <- readCmd
+    id <- identifier
+    return (rd id)
+
+retCmd = do reserved "return"; return Ret
+
+returnSomething =
+  do
+    rt <- retCmd
+    e <- expr
+    return (rt e)
+
+
+impCmd = do reserved "print"; return Imp
+
+printSomething =
+  do
+    pt <- impCmd
+    e <- expr
+    return (pt e)
+
+ifCmd = do reserved "if"; return If
+
+ifBlock =
+  do
+    cmd <- ifCmd
+    e <- parens exprL
+    blk <- braces cmdBlock
+    blk2 <- braces cmdBlock
+    return (cmd e blk blk2)
+
+whileCmd = do reserved "while"; return While
+
+whileBlock =
+  do
+    cmd <- whileCmd
+    e <- parens exprL
+    blk <- braces cmdBlock
+    return (cmd e blk)
+
+cmd = try (do {atrib})
+      <|> try (do {readSomething})
+      <|> try (do {printSomething})
+      <|> try (do {returnSomething})
+      <|> try (do {ifBlock})
+      <|> try (do {whileBlock})
+
+
+cmdBlock = 
+  do
+    blk <- many1 cmd
+    return blk
+
+
+-- *********************************************************************
+-- Program :33
+-- *********************************************************************
+funBlock = 
+  do
+    id <- identifier
+    vars <- parens (many varDec)
+    blk <- braces cmdBlock
+    return (id, vars, blk)
+
+prog = 
+  do
+    funDecs <- brackets(many funDec)
+    funBlks <- brackets(many funBlock)
+    vars <- brackets(many varDec)
+    reserved "main"
+    mainBlk <- braces cmdBlock
+    return (Prog funDecs funBlks vars mainBlk)
+
+
+
+-- *********************************************************************
 -- Parser Start
 -- *********************************************************************
 
 
-partida = do comment ; try (do {e <- exprL; eof; return (show e)})
-                        <|> do {e <- expr; eof; return (show e)}
-           
-
+partida = do comment ;  --try(do {r <- varDec; eof; return (show r)})   
+                        -- <|> try(do {r <- funDec; eof; return (show r) })
+                         try(do{r <- prog; eof; return r})
 parserE  = do runParser partida [] "Expressoes"   
 
 
