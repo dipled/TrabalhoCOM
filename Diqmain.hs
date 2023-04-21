@@ -31,24 +31,43 @@ lingDef =
           "/=",
           "&&",
           "||",
-          "~"
+          "~",
+          "#"
         ],
         T.identStart      = letter <|> char '_',
-        T.identLetter     = alphaNum <|> char '_'
+        T.identLetter     = alphaNum <|> char '_',
+        T.reservedNames = 
+          [
+            "TInt", "TDouble", "TString", "TVoid"
+          ]
     }
 tabela   = [[prefix "-" Neg]
             , [binario "*" (:*:) AssocLeft, binario "/" (:/:) AssocLeft ]
             , [binario "+" (:+:) AssocLeft, binario "-" (:-:)   AssocLeft ]
            ]
+
+
+binario name fun = Infix (do {reservedOp name; return fun })
+prefix   name fun       = Prefix (do {reservedOp name; return fun })
+
+
 tabelaL = [[prefix "~" Not]
             ,[binarioL "&&" (:&:) AssocLeft]
             ,[binarioL "||" (:|:) AssocLeft]
           ]
-binario name fun = Infix (do {reservedOp name; return fun })
-prefix   name fun       = Prefix (do {reservedOp name; return fun })
+
 
 binarioL name fun = Infix (do {reservedOp name; return fun })
 prefixL   name fun       = Prefix (do {reservedOp name; return fun })
+
+{-para o operador relacional nao precisamos fazer tabela nem o fator, pois cada operador tem a mesma precedencia-}
+op =
+  do reservedOp "=="; return (:==:)
+    <|> do reservedOp ">="; return (:>=:)
+    <|> do reservedOp "<="; return (:<=:)
+    <|> do reservedOp ">"; return (:>:)
+    <|> do reservedOp "<"; return (:<:)
+    <|> do reservedOp "/="; return (:/=:)
 
 lexico = T.makeTokenParser lingDef
 intOrDouble = T.naturalOrFloat lexico
@@ -58,6 +77,7 @@ reservedOp = T.reservedOp lexico
 varIdentifier = T.identifier lexico
 literalString = T.stringLiteral lexico
 comment = T.whiteSpace lexico
+
 
 constT = do {n <- intOrDouble; case n of
                                   Left num -> return (Const (CInt num))
@@ -78,24 +98,16 @@ fatorL = parens exprL
 expr = buildExpressionParser tabela fator
        <?> "expression" 
 
+
 exprR =  do {e1 <- expr; o <- op; e2 <- expr; return (o e1 e2)}
            
 
-
-
 exprL = buildExpressionParser tabelaL fatorL
-{-para o operador relacional nao precisamos fazer tabela nem o fator, pois cada operador tem a mesma precedencia-}
-op =
-  do reservedOp "=="; return (:==:)
-    <|> do reservedOp ">="; return (:>=:)
-    <|> do reservedOp "<="; return (:<=:)
-    <|> do reservedOp ">"; return (:>:)
-    <|> do reservedOp "<"; return (:<:)
-    <|> do reservedOp "/="; return (:/=:)
 
 
-partida = try (do {e <- exprL; eof; return (show e)})
-           <|> do {e <- expr; eof; return (show e)}
+partida = do comment ; try (do {e <- exprL; eof; return (show e)})
+                        <|> do {e <- expr; eof; return (show e)}
+           
 
 parserE  = do runParser partida [] "Expressoes"   
 
