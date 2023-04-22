@@ -44,6 +44,7 @@ lingDef =
           "print",
           "return",
           "if",
+          "else",
           "while",
           ";"
         ]
@@ -96,7 +97,7 @@ constT =
           Right num -> return (Const (CDouble num))
     )
     <|> try (do lit <- literalString; return (Lit lit))
-    <|> try (do id <- identifier; exs <- many1 expr; return (Chamada id exs))
+    <|> try (funCall)
     <|> try (do id <- identifier; return (IdVar id))
 
 fator =
@@ -154,10 +155,12 @@ typeAssert =
 
 
 -- Commands
+listExpr = try (do comma; e <- expr; return e)
+           <|> do e <- expr; return e
+funCall = do id <- identifier; exs <- parens(many listExpr); return (Chamada id exs)
 cmdEnd = do reserved ";"
 
-atribOp = do reservedOp "=" >> return Atrib
-
+atribOp = try (do reservedOp "=" >> return Atrib)
 atrib =
   do
     id <- identifier
@@ -201,6 +204,7 @@ ifBlock =
     e <- parens exprL
     blk <- braces cmdBlock
     let actualBlk = snd blk
+    reserved ("else")
     blk2 <- braces cmdBlock
     let actualBlk2 = snd blk2
     return (cmd e actualBlk actualBlk2)
@@ -269,14 +273,13 @@ resto (a,b,c,d) = (b,c,d)
 prog =
   do
     funBlks <- many funBlock
-
     let decs = map first funBlks
         blks = map resto funBlks
         varsList = map third funBlks
-        vars = concat varsList
     mainBlk <- braces cmdBlock
     let actualMain = snd mainBlk
-    return (Prog decs blks vars actualMain)
+    let localVars = fst mainBlk
+    return (Prog decs blks localVars actualMain)
 
 -- Parser Start
 

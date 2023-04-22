@@ -1,4 +1,3 @@
-
 int vec (int s, double zzzz)
 {
     int x;
@@ -6,23 +5,40 @@ int vec (int s, double zzzz)
     void o;
     return 3;
 }
-
+int id(int x)
 {
-    escolha = 1;
     while(escolha == 1)
     {
         if(2 == 3 && 3 == 5)
         {
             return -2;
         }
+        else
+        {
+            read (d);
+        }
+    return x;
+    }
+}
+
+{
+    void escolha;
+    escolha = 1;
+    peano = false;
+    while(escolha == 1)
+    {
+        if(2 == 3 && 3 == 5)
+        {
+            return -2;
+        }
+        else
         {
             print ("digite um numero");
             read (x);
-            print(fatorial x);
+            print(fatorial (x,d));
             print ("Digite 1 para continuar ou 0 para parar");
             read (escolha);
         }
     }
     return 0;
 }
-
