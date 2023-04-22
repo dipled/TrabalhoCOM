@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Use concat" #-}
 module Diqmain where
 
@@ -152,15 +153,17 @@ typeAssert =
     <|> do reserved "string" >> return TString
     <|> do reserved "void" >> return TVoid
 
-
-
 -- Commands
-listExpr = try (do comma; e <- expr; return e)
-           <|> do e <- expr; return e
-funCall = do id <- identifier; exs <- parens(many listExpr); return (Chamada id exs)
+listExpr =
+  try (do comma; e <- expr; return e)
+    <|> do e <- expr; return e
+
+funCall = do id <- identifier; exs <- parens (many listExpr); return (Chamada id exs)
+
 cmdEnd = do reserved ";"
 
 atribOp = try (do reservedOp "=" >> return Atrib)
+
 atrib =
   do
     id <- identifier
@@ -200,10 +203,14 @@ ifBlock =
     e <- parens exprL
     blk <- braces cmdBlock
     let actualBlk = snd blk
-    reserved ("else")
-    blk2 <- braces cmdBlock
-    let actualBlk2 = snd blk2
-    return (cmd e actualBlk actualBlk2)
+    try
+      ( do
+          reserved "else"
+          blk2 <- braces cmdBlock
+          let actualBlk2 = snd blk2
+          return (cmd e actualBlk actualBlk2)
+      )
+      <|> return (cmd e actualBlk [])
 
 whileCmd = do reserved "while" >> return While
 
@@ -217,15 +224,18 @@ whileBlock =
 
 cmd =
   try (do atrib >>= \r -> cmdEnd >> return r)
-    <|> try (do readSomething>>= \r -> cmdEnd >> return r)
-    <|> try (do printSomething>>= \r -> cmdEnd >> return r)
-    <|> try (do returnSomething>>= \r -> cmdEnd >> return r)
-    <|> try (do ifBlock>>= \r -> return r)
+    <|> try (do readSomething >>= \r -> cmdEnd >> return r)
+    <|> try (do printSomething >>= \r -> cmdEnd >> return r)
+    <|> try (do returnSomething >>= \r -> cmdEnd >> return r)
+    <|> try (do ifBlock >>= \r -> return r)
     <|> try (do whileBlock >>= \r -> return r)
-    <|> try (do r <-funCall; cmdEnd; return (Fun r))
-parseIds = try (do comma ; id <- identifier; return id)
-           <|> do id <- identifier ; return id
-varDec = 
+    <|> try (do r <- funCall; cmdEnd; return (Fun r))
+
+parseIds =
+  try (do comma; id <- identifier; return id)
+    <|> do id <- identifier; return id
+
+varDec =
   do
     t <- typeAssert
     ids <- many1 parseIds
@@ -250,8 +260,10 @@ argDec =
     id <- identifier
     return (id :#: t)
 
-args = try (do comma; arg <- argDec; return arg)
-       <|> do arg <- argDec; return arg
+args =
+  try (do comma; arg <- argDec; return arg)
+    <|> do arg <- argDec; return arg
+
 funBlock =
   do
     t <- typeAssert
@@ -260,10 +272,12 @@ funBlock =
     blk <- braces cmdBlock
     let localVars = fst blk
     let cmds = snd blk
-    return (id :->: (as, t),id,localVars,cmds)
+    return (id :->: (as, t), id, localVars, cmds)
 
-first4 (a,b,c,d) = a
-resto4 (a,b,c,d) = (b,c,d)
+first4 (a, b, c, d) = a
+
+resto4 (a, b, c, d) = (b, c, d)
+
 prog =
   do
     funBlks <- many funBlock
@@ -284,8 +298,8 @@ parserExpr s = case parserE s of
   Left er -> print er
   Right v -> print v
 
-main = 
-  do 
+main =
+  do
     putStrLn "Digite o nome do arquivo que voce deseja ler"
     nome <- getLine
     e <- readFile (nome)

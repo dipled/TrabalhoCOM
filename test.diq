@@ -19,6 +19,10 @@ double somatorio(int a, double b, int c)
     {
         print("digite um valor valido ;-;");
     }
+    if(x == 1)
+    {
+        print(tesst);
+    }
     print("ola mundo");
     funcao (2+2, 3-2);
     return 0;
