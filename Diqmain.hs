@@ -45,7 +45,6 @@ lingDef =
           "return",
           "if",
           "while",
-          "main",
           ";"
         ]
     }
@@ -97,7 +96,7 @@ constT =
           Right num -> return (Const (CDouble num))
     )
     <|> try (do lit <- literalString; return (Lit lit))
-    <|> try (do id <- identifier; exs <- many1 expr; return (Chamada id exs)) -- esse many1 pode vir a virar many futuramente
+    <|> try (do id <- identifier; exs <- many1 expr; return (Chamada id exs))
     <|> try (do id <- identifier; return (IdVar id))
 
 fator =
@@ -225,14 +224,15 @@ cmd =
     <|> try (ifBlock)
     <|> try (whileBlock)
 
-parseIds = try (do id <- identifier; comma; return id)
+parseIds = try (do comma ; id <- identifier; return id)
            <|> do id <- identifier ; return id
-varDec = try (do
-                t <- typeAssert
-                ids <- many1 parseIds
-                cmdEnd
-                let ret = map (argConstruct t) ids
-                return ret)
+varDec = 
+  do
+    t <- typeAssert
+    ids <- many1 parseIds
+    cmdEnd
+    let ret = map (argConstruct t) ids
+    return ret
 
 argConstruct t id = (id :#: t)
 
@@ -240,7 +240,7 @@ cmdBlock =
   do
     vars <- many varDec
     let v = concat vars
-    blk <- many1 cmd
+    blk <- many cmd
     return (v, blk)
 
 -- Program :33
@@ -251,7 +251,7 @@ argDec =
     id <- identifier
     return (id :#: t)
 
-args = try (do arg <- argDec ; comma; return arg)
+args = try (do comma; arg <- argDec; return arg)
        <|> do arg <- argDec; return arg
 funBlock =
   do
@@ -274,7 +274,6 @@ prog =
         blks = map resto funBlks
         varsList = map third funBlks
         vars = concat varsList
-    reserved "main"
     mainBlk <- braces cmdBlock
     let actualMain = snd mainBlk
     return (Prog decs blks vars actualMain)

@@ -1,11 +1,12 @@
 
-int vec ()
+int vec (int s, double zzzz)
 {
-    int x, y, z;
+    int x;
+    int y, z;
+    void o;
     return 3;
 }
 
-main
 {
     escolha = 1;
     while(escolha == 1)
