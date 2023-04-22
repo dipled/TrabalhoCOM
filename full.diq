@@ -5,6 +5,8 @@ int vec (int s, double zzzz)
     void o;
     return 3;
 }
+void vazio()
+{}
 int id(int x)
 {
     while(escolha == 1)

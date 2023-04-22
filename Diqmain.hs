@@ -292,4 +292,9 @@ parserExpr s = case parserE s of
   Left er -> print er
   Right v -> print v
 
-main = do readFile "arq.txt" >>= \code -> parserExpr code
+main = 
+  do 
+    putStrLn "Digite o nome do arquivo que voce deseja ler"
+    nome <- getLine
+    e <- readFile (nome)
+    parserExpr e

@@ -1,0 +1,24 @@
+double somatorio(int a, double b, int c)
+{
+    void lol;
+    while(c > 0)
+    {
+        c = c - 1;
+        b = b + a;
+    }
+    return b;
+}
+{
+    int x, z;
+    double y;
+    if(x > 0 && x < 200)
+    {
+        somatorio(x, y, z);
+    }
+    else
+    {
+        print("digite um valor valido ;-;");
+    }
+    print("ola mundo");
+    return 0;
+}
