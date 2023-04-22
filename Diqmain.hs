@@ -166,7 +166,6 @@ atrib =
     id <- identifier
     o <- atribOp
     e <- expr
-    cmdEnd
     return (o id e)
 
 readCmd = do reserved "read" >> return Leitura
@@ -175,7 +174,6 @@ readSomething =
   do
     rd <- readCmd
     id <- parens identifier
-    cmdEnd
     return (rd id)
 
 retCmd = do reserved "return" >> return Ret
@@ -184,7 +182,6 @@ returnSomething =
   do
     rt <- retCmd
     e <- expr
-    cmdEnd
     return (rt e)
 
 impCmd = do reserved "print" >> return Imp
@@ -193,7 +190,6 @@ printSomething =
   do
     pt <- impCmd
     e <- parens expr
-    cmdEnd
     return (pt e)
 
 ifCmd = do reserved "if" >> return If
@@ -217,18 +213,16 @@ whileBlock =
     e <- parens exprL
     blk <- braces cmdBlock
     let actualBlk = snd blk
-
     return (cmd e actualBlk)
 
 cmd =
-  try (atrib)
-    <|> try (readSomething)
-    <|> try (printSomething)
-    <|> try (returnSomething)
-    <|> try (ifBlock)
-    <|> try (whileBlock)
+  try (do atrib >>= \r -> cmdEnd >> return r)
+    <|> try (do readSomething>>= \r -> cmdEnd >> return r)
+    <|> try (do printSomething>>= \r -> cmdEnd >> return r)
+    <|> try (do returnSomething>>= \r -> cmdEnd >> return r)
+    <|> try (do ifBlock>>= \r -> return r)
+    <|> try (do whileBlock >>= \r -> return r)
     <|> try (do r <-funCall; cmdEnd; return (Fun r))
-
 parseIds = try (do comma ; id <- identifier; return id)
            <|> do id <- identifier ; return id
 varDec = 
