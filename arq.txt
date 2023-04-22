@@ -33,6 +33,8 @@ int id(int x)
         }
         else
         {
+            a = id(4);
+            fatorial (2);
             print ("digite um numero");
             read (x);
             print(fatorial (x,d));

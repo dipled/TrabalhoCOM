@@ -19,4 +19,5 @@ data Comando
   | Leitura Id
   | Imp Expr
   | Ret Expr
+  | Fun Expr
   deriving (Show)

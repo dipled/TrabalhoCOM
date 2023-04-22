@@ -221,12 +221,13 @@ whileBlock =
     return (cmd e actualBlk)
 
 cmd =
-  try (do atrib)
+  try (atrib)
     <|> try (readSomething)
     <|> try (printSomething)
     <|> try (returnSomething)
     <|> try (ifBlock)
     <|> try (whileBlock)
+    <|> try (do r <-funCall; cmdEnd; return (Fun r))
 
 parseIds = try (do comma ; id <- identifier; return id)
            <|> do id <- identifier ; return id
