@@ -244,9 +244,9 @@ argConstruct t id = (id :#: t)
 cmdBlock =
   do
     vars <- many varDec
-    let v = concat vars
-    blk <- many cmd
-    return (v, blk)
+    let varList = concat vars
+    cmds <- many cmd
+    return (varList, cmds)
 
 -- Program :33
 
@@ -265,22 +265,20 @@ funBlock =
     as <- parens (many args)
     blk <- braces cmdBlock
     let localVars = fst blk
-    let actualBlk = snd blk
-    return (id :->: (as, t),id,localVars,actualBlk)
+    let cmds = snd blk
+    return (id :->: (as, t),id,localVars,cmds)
 
-first (a,b,c,d) = a
-third (a,b,c,d) = c
-resto (a,b,c,d) = (b,c,d)
+first4 (a,b,c,d) = a
+resto4 (a,b,c,d) = (b,c,d)
 prog =
   do
     funBlks <- many funBlock
-    let decs = map first funBlks
-        blks = map resto funBlks
-        varsList = map third funBlks
+    let funDecs = map first4 funBlks
+        funScopes = map resto4 funBlks
     mainBlk <- braces cmdBlock
+    let mainVars = fst mainBlk
     let actualMain = snd mainBlk
-    let localVars = fst mainBlk
-    return (Prog decs blks localVars actualMain)
+    return (Prog funDecs funScopes mainVars actualMain)
 
 -- Parser Start
 
