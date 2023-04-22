@@ -1,7 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Use <$>" #-}
-{-# HLINT ignore "Redundant return" #-}
+{-# HLINT ignore "Use concat" #-}
 module Diqmain where
 
 import Diqcode
@@ -33,9 +31,7 @@ lingDef =
           "&&",
           "||",
           "~",
-          "#",
-          "->",
-          ":="
+          "="
         ],
       T.identStart = letter <|> char '_',
       T.identLetter = alphaNum <|> char '_',
@@ -49,7 +45,8 @@ lingDef =
           "return",
           "if",
           "while",
-          "main"
+          "main",
+          ";"
         ]
     }
 
@@ -77,6 +74,8 @@ angles = T.angles lexico
 
 brackets = T.brackets lexico
 
+comma = T.comma lexico
+
 -- Expr
 
 binario name fun = Infix (do reservedOp name; return fun)
@@ -103,7 +102,7 @@ constT =
 
 fator =
   parens expr
-    <|> do c <- constT; return c
+    <|> do constT >>= \c -> return c
     <?> "simple expression"
 
 expr =
@@ -116,12 +115,12 @@ expr =
 -- because all operators have the same precedence level
 
 op =
-  do reservedOp "=="; return (:==:)
-    <|> do reservedOp ">="; return (:>=:)
-    <|> do reservedOp "<="; return (:<=:)
-    <|> do reservedOp ">"; return (:>:)
-    <|> do reservedOp "<"; return (:<:)
-    <|> do reservedOp "/="; return (:/=:)
+  do reservedOp "==" >> return (:==:)
+    <|> do reservedOp ">=" >> return (:>=:)
+    <|> do reservedOp "<=" >> return (:<=:)
+    <|> do reservedOp ">" >> return (:>:)
+    <|> do reservedOp "<" >> return (:<:)
+    <|> do reservedOp "/=" >> return (:/=:)
 
 exprR =
   parens exprR
@@ -135,127 +134,150 @@ tabelaL =
     [binarioL "||" (:|:) AssocLeft]
   ]
 
-binarioL name fun = Infix (do reservedOp name; return fun)
+binarioL name fun = Infix (do reservedOp name >> return fun)
 
-prefixL name fun = Prefix (do reservedOp name; return fun)
+prefixL name fun = Prefix (do reservedOp name >> return fun)
 
 fatorL =
   parens exprL
-    <|> do e <- exprR; return (Rel e)
+    <|> do exprR >>= \e -> return (Rel e)
 
 exprL = buildExpressionParser tabelaL fatorL
 
 -- Var declaration and func
 
 typeAssert =
-  do reserved "int"; return TInt
-    <|> do reserved "double"; return TDouble
-    <|> do reserved "string"; return TString
-    <|> do reserved "void"; return TVoid
+  do reserved "int" >> return TInt
+    <|> do reserved "double" >> return TDouble
+    <|> do reserved "string" >> return TString
+    <|> do reserved "void" >> return TVoid
 
-varDecOp = do reservedOp "#"; return (:#:)
 
-varDec =
-  do
-    id <- identifier
-    o <- varDecOp
-    t <- typeAssert
-    return (o id t)
-
-funOp = do reservedOp "->"; return (:->:)
-
-funDec =
-  do
-    id <- identifier
-    o <- funOp
-    vars <- parens (many varDec)
-    t <- typeAssert
-    return (o id (vars, t))
 
 -- Commands
+cmdEnd = do reserved ";"
 
-atribOp = do reservedOp ":="; return Atrib
+atribOp = do reservedOp "=" >> return Atrib
 
 atrib =
   do
     id <- identifier
     o <- atribOp
     e <- expr
+    cmdEnd
     return (o id e)
 
-readCmd = do reserved "read"; return Leitura
+readCmd = do reserved "read" >> return Leitura
 
 readSomething =
   do
     rd <- readCmd
-    id <- identifier
+    id <- parens identifier
+    cmdEnd
     return (rd id)
 
-retCmd = do reserved "return"; return Ret
+retCmd = do reserved "return" >> return Ret
 
 returnSomething =
   do
     rt <- retCmd
     e <- expr
+    cmdEnd
     return (rt e)
 
-impCmd = do reserved "print"; return Imp
+impCmd = do reserved "print" >> return Imp
 
 printSomething =
   do
     pt <- impCmd
-    e <- expr
+    e <- parens expr
+    cmdEnd
     return (pt e)
 
-ifCmd = do reserved "if"; return If
+ifCmd = do reserved "if" >> return If
 
 ifBlock =
   do
     cmd <- ifCmd
     e <- parens exprL
     blk <- braces cmdBlock
+    let actualBlk = snd blk
     blk2 <- braces cmdBlock
-    return (cmd e blk blk2)
+    let actualBlk2 = snd blk2
+    return (cmd e actualBlk actualBlk2)
 
-whileCmd = do reserved "while"; return While
+whileCmd = do reserved "while" >> return While
 
 whileBlock =
   do
     cmd <- whileCmd
     e <- parens exprL
     blk <- braces cmdBlock
-    return (cmd e blk)
+    let actualBlk = snd blk
+
+    return (cmd e actualBlk)
 
 cmd =
-  try (atrib)
+  try (do atrib)
     <|> try (readSomething)
     <|> try (printSomething)
     <|> try (returnSomething)
     <|> try (ifBlock)
     <|> try (whileBlock)
 
+parseIds = try (do id <- identifier; comma; return id)
+           <|> do id <- identifier ; return id
+varDec = try (do
+                t <- typeAssert
+                ids <- many1 parseIds
+                cmdEnd
+                let ret = map (argConstruct t) ids
+                return ret)
+
+argConstruct t id = (id :#: t)
+
 cmdBlock =
   do
+    vars <- many varDec
+    let v = concat vars
     blk <- many1 cmd
-    return blk
+    return (v, blk)
 
 -- Program :33
 
+argDec =
+  do
+    t <- typeAssert
+    id <- identifier
+    return (id :#: t)
+
+args = try (do arg <- argDec ; comma; return arg)
+       <|> do arg <- argDec; return arg
 funBlock =
   do
+    t <- typeAssert
     id <- identifier
-    vars <- parens (many varDec)
+    as <- parens (many args)
     blk <- braces cmdBlock
-    return (id, vars, blk)
+    let localVars = fst blk
+    let actualBlk = snd blk
+    return (id :->: (as, t),id,localVars,actualBlk)
 
+first (a,b,c,d) = a
+third (a,b,c,d) = c
+resto (a,b,c,d) = (b,c,d)
 prog =
   do
-    funDecs <- brackets (many funDec)
-    funBlks <- brackets (many funBlock)
-    vars <- brackets (many varDec)
+    funBlks <- many funBlock
+
+    let decs = map first funBlks
+        blks = map resto funBlks
+        varsList = map third funBlks
+        vars = concat varsList
     reserved "main"
     mainBlk <- braces cmdBlock
-    return (Prog funDecs funBlks vars mainBlk)
+    let actualMain = snd mainBlk
+    return (Prog decs blks vars actualMain)
 
 -- Parser Start
 
