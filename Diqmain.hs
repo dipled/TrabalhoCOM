@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use <$>" #-}
 {-# HLINT ignore "Redundant return" #-}
-
 module Diqmain where
 import Diqcode
 import Diqtypes
@@ -76,7 +75,7 @@ brackets = T.brackets lexico
 
 binario name fun = Infix (do {reservedOp name; return fun })
 
-prefix   name fun       = Prefix (do {reservedOp name; return fun })
+prefix   name fun = Prefix (do {reservedOp name; return fun })
 
 
 tabela   = [[prefix "-" Neg]
@@ -87,7 +86,7 @@ tabela   = [[prefix "-" Neg]
 
 constT = try (do {n <- intOrDouble; case n of
                                   Left num -> return (Const (CInt num))
-                                  Right num -> return (Const (CDouble num)) })
+                                  Right num -> return (Const (CDouble num))})
          <|> try (do {lit <- literalString; return (Lit lit)})
          <|> try (do {id <- identifier; exs <- many1 expr; return (Chamada id exs)}) --esse many1 pode vir a virar many futuramente
          <|> try (do {id <- identifier; return (IdVar id)})
@@ -120,7 +119,8 @@ op =
     <|> do reservedOp "/="; return (:/=:)
 
 
-exprR =  do {e1 <- expr; o <- op; e2 <- expr; return (o e1 e2)}
+exprR = parens exprR 
+        <|>do {e1 <- expr; o <- op; e2 <- expr; return (o e1 e2)}
 
 
 -- *********************************************************************
@@ -278,8 +278,7 @@ prog =
 -- *********************************************************************
 
 
-partida = do comment ;  --try(do {r <- varDec; eof; return (show r)})   
-                        -- <|> try(do {r <- funDec; eof; return (show r) })
+partida = do comment ;  
                          try(do{r <- prog; eof; return r})
 parserE  = do runParser partida [] "Expressoes"   
 
