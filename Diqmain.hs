@@ -196,18 +196,19 @@ printSomething =
     return (pt e)
 
 ifCmd = do reserved "if" >> return If
-
 ifBlock =
   do
     cmd <- ifCmd
     e <- parens exprL
     blk <- braces cmdBlock
-    actualBlk <- do {return (snd blk)}
+    --actualBlk <- do return (snd blk)
+    let actualBlk = snd blk
     try
-      ( do
+      (do
           reserved "else"
           blk2 <- braces cmdBlock
-          actualBlk2 <- do return (snd blk2)
+          --actualBlk2 <- do return (snd blk2)
+          let actualBlk2 = snd blk2
           return (cmd e actualBlk actualBlk2)
       )
       <|> return (cmd e actualBlk [])
@@ -248,7 +249,7 @@ argConstruct t id = (id :#: t)
 cmdBlock =
   do
     vars <- many varDec
-    varList <- do return (concat vars)
+    let varList = concat vars
     cmds <- many cmd
     return (varList, cmds)
 
@@ -271,7 +272,7 @@ funBlock =
     as <- parens (many args)
     blk <- braces cmdBlock
     let localVars = fst blk
-    let cmds = snd blk
+        cmds = snd blk
     return (id :->: (as, t), id, localVars, cmds)
 
 first4 (a, b, c, d) = a
@@ -281,11 +282,11 @@ resto4 (a, b, c, d) = (b, c, d)
 prog =
   do
     funBlks <- many funBlock
+    mainBlk <- braces cmdBlock
     let funDecs = map first4 funBlks
         funScopes = map resto4 funBlks
-    mainBlk <- braces cmdBlock
-    let mainVars = fst mainBlk
-    let actualMain = snd mainBlk
+        mainVars = fst mainBlk
+        actualMain = snd mainBlk
     return (Prog funDecs funScopes mainVars actualMain)
 
 -- Parser Start
