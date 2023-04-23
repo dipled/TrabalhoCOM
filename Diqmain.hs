@@ -97,9 +97,9 @@ constT =
           Left num -> return (Const (CInt num))
           Right num -> return (Const (CDouble num))
     )
-    <|> try (do lit <- literalString; return (Lit lit))
+    <|> try (do literalString >>= \lit -> return (Lit lit))
     <|> try (funCall)
-    <|> try (do id <- identifier; return (IdVar id))
+    <|> try (do identifier >>= \id -> return (IdVar id))
 
 fator =
   parens expr
@@ -202,12 +202,12 @@ ifBlock =
     cmd <- ifCmd
     e <- parens exprL
     blk <- braces cmdBlock
-    let actualBlk = snd blk
+    actualBlk <- do {return (snd blk)}
     try
       ( do
           reserved "else"
           blk2 <- braces cmdBlock
-          let actualBlk2 = snd blk2
+          actualBlk2 <- do return (snd blk2)
           return (cmd e actualBlk actualBlk2)
       )
       <|> return (cmd e actualBlk [])
@@ -240,7 +240,7 @@ varDec =
     t <- typeAssert
     ids <- many1 parseIds
     cmdEnd
-    let ret = map (argConstruct t) ids
+    ret <- do return ( map (argConstruct t) ids)    
     return ret
 
 argConstruct t id = (id :#: t)
@@ -248,7 +248,7 @@ argConstruct t id = (id :#: t)
 cmdBlock =
   do
     vars <- many varDec
-    let varList = concat vars
+    varList <- do return (concat vars)
     cmds <- many cmd
     return (varList, cmds)
 
