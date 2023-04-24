@@ -31,7 +31,7 @@ lingDef =
           "/=",
           "&&",
           "||",
-          "~",
+          "!",
           "="
         ],
       T.identStart = letter <|> char '_',
@@ -97,7 +97,7 @@ constT =
         Right num -> return (Const (CDouble num))
   )
     <|> (do literalString >>= \lit -> return (Lit lit))
-    <|> try (funCall)
+    <|> try (do id <- identifier; exs <- parens (many listExpr); return (Chamada id exs))
     <|> (do identifier >>= \id -> return (IdVar id))
 
 fator =
@@ -129,7 +129,7 @@ exprR =
 -- ExprL
 
 tabelaL =
-  [ [prefix "~" Not],
+  [ [prefix "!" Not],
     [binarioL "&&" (:&:) AssocLeft],
     [binarioL "||" (:|:) AssocLeft]
   ]
@@ -157,83 +157,64 @@ listExpr =
      do e <- expr; return e
     <|> (do comma; e <- expr; return e)
 
-funCall = do id <- identifier; exs <- parens (many listExpr); return (Chamada id exs)
-
-funCallCmd = do id <- identifier; exs <- parens (many listExpr); return (ChamadaFuncao id exs)
-
-
-atribOp = (do reservedOp "=" >> return Atrib)
-
 atrib =
   do
     id <- identifier
-    o <- atribOp
+    reservedOp "="
     e <- expr
-    return (o id e)
-
-readCmd = do reserved "read" >> return Leitura
+    return (Atrib id e)
 
 readSomething =
   do
-    rd <- readCmd
+    reserved "read"
     id <- parens identifier
-    return (rd id)
-
-retCmd = do reserved "return" >> return Ret
+    return (Leitura id)
 
 returnSomething =
   do
-    rt <- retCmd
+    reserved "return"
     e <- expr
-    return (rt e)
-
-impCmd = do reserved "print" >> return Imp
+    return (Ret e)
 
 printSomething =
   do
-    pt <- impCmd
+    reserved "print"
     e <- parens expr
-    return (pt e)
-
-ifCmd = do reserved "if" >> return If
+    return (Imp e)
 
 elseBlock =
-  
-    ( do
+    do
         reserved "else"
         blk2 <- braces cmdBlock
         let actualBlk2 = snd blk2
         return (actualBlk2)
-    )
     <|> do return []
 
 ifBlock =
   do
-    cmd <- ifCmd
+    reserved "if"
     e <- parens exprL
     blk <- braces cmdBlock
     let actualBlk = snd blk
     ret <- elseBlock
-    return (cmd e actualBlk ret)
-
-whileCmd = do reserved "while" >> return While
+    return (If e actualBlk ret)
 
 whileBlock =
   do
-    cmd <- whileCmd
+    reserved "while"
     e <- parens exprL
     blk <- braces cmdBlock
     let actualBlk = snd blk
-    return (cmd e actualBlk)
+    return (While e actualBlk)
 
 cmd =
-  try (do atrib >>= \r -> semi >> return r)
+   try (do atrib >>= \r -> semi >> return r)
     <|> (do readSomething >>= \r -> semi >> return r)
     <|> (do printSomething >>= \r -> semi >> return r)
     <|> (do returnSomething >>= \r -> semi >> return r)
     <|> (do ifBlock >>= \r -> return r)
     <|> (do whileBlock >>= \r -> return r)
-    <|> (do r <- funCallCmd; semi; return r)
+    <|> (do id <- identifier; exs <- parens (many listExpr);semi;return (ChamadaFuncao id exs))
 
 parseIds =
        do id <- identifier; return id
@@ -305,7 +286,5 @@ parserExpr s = case parserE s of
 
 main =
   do
-    putStrLn "Digite o nome do arquivo que voce deseja ler"
-    nome <- getLine
-    e <- readFile (nome)
+    e <- readFile "arq.diq"
     parserExpr e

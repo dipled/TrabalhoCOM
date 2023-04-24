@@ -1,7 +1,6 @@
 int vec (int s, double zzzz)
 {
-    int x;
-    int y, z;
+    int x;int y, z;
     void o;
     string s;
     return 3;
@@ -38,8 +37,8 @@ int id(int x)
             
         }
         if(a == b){
-            print(fatorial());}
-        print(fatorial);
+            print(fatorial(5));}
+        print(soma);
         fatorial(x,y,z);
         a = 3;
         a = "teste";
