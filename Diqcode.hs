@@ -19,5 +19,5 @@ data Comando
   | Leitura Id
   | Imp Expr
   | Ret Expr
-  | Fun Expr
+  | ChamadaFuncao Id [Expr]
   deriving (Show)

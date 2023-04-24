@@ -3,6 +3,7 @@ int vec (int s, double zzzz)
     int x;
     int y, z;
     void o;
+    string s;
     return 3;
 }
 void vazio()
@@ -26,7 +27,6 @@ int id(int x)
 {
     void escolha;
     escolha = 1;
-    peano = false;
     while(escolha == 1)
     {
         if(2 == 3 && 3 == 5)
@@ -35,14 +35,12 @@ int id(int x)
         }
         else
         {
-            a = id(4);
-            fatorial (2);
-            print ("digite um numero");
-            read (x);
-            print(fatorial (x,d));
-            print ("Digite 1 para continuar ou 0 para parar");
-            read (escolha);
+            
         }
+        if(a == b){
+            print(fatorial());}
+        print(fatorial);
+        fatorial(x,y,z);
     }
     return 0;
 }

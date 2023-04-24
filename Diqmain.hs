@@ -90,16 +90,15 @@ tabela =
   ]
 
 constT =
-  try
-    ( do
-        n <- intOrDouble
-        case n of
-          Left num -> return (Const (CInt num))
-          Right num -> return (Const (CDouble num))
-    )
-    <|> try (do literalString >>= \lit -> return (Lit lit))
+  ( do
+      n <- intOrDouble
+      case n of
+        Left num -> return (Const (CInt num))
+        Right num -> return (Const (CDouble num))
+  )
+    <|> (do literalString >>= \lit -> return (Lit lit))
     <|> try (funCall)
-    <|> try (do identifier >>= \id -> return (IdVar id))
+    <|> (do identifier >>= \id -> return (IdVar id))
 
 fator =
   parens expr
@@ -155,14 +154,16 @@ typeAssert =
 
 -- Commands
 listExpr =
-  try (do comma; e <- expr; return e)
-    <|> do e <- expr; return e
+     do e <- expr; return e
+    <|> (do comma; e <- expr; return e)
 
 funCall = do id <- identifier; exs <- parens (many listExpr); return (Chamada id exs)
 
+funCallCmd = do id <- identifier; exs <- parens (many listExpr); return (ChamadaFuncao id exs)
+
 cmdEnd = do reserved ";"
 
-atribOp = try (do reservedOp "=" >> return Atrib)
+atribOp = (do reservedOp "=" >> return Atrib)
 
 atrib =
   do
@@ -196,18 +197,22 @@ printSomething =
     return (pt e)
 
 ifCmd = do reserved "if" >> return If
-elseBlock = try(do
-                  reserved "else"
-                  blk2 <- braces cmdBlock
-                  let actualBlk2 = snd blk2
-                  return (actualBlk2))
-           <|> do return []
+
+elseBlock =
+  
+    ( do
+        reserved "else"
+        blk2 <- braces cmdBlock
+        let actualBlk2 = snd blk2
+        return (actualBlk2)
+    )
+    <|> do return []
+
 ifBlock =
   do
     cmd <- ifCmd
     e <- parens exprL
     blk <- braces cmdBlock
-    --actualBlk <- do return (snd blk)
     let actualBlk = snd blk
     ret <- elseBlock
     return (cmd e actualBlk ret)
@@ -224,23 +229,23 @@ whileBlock =
 
 cmd =
   try (do atrib >>= \r -> cmdEnd >> return r)
-    <|> try (do readSomething >>= \r -> cmdEnd >> return r)
-    <|> try (do printSomething >>= \r -> cmdEnd >> return r)
-    <|> try (do returnSomething >>= \r -> cmdEnd >> return r)
-    <|> try (do ifBlock >>= \r -> return r)
-    <|> try (do whileBlock >>= \r -> return r)
-    <|> try (do r <- funCall; cmdEnd; return (Fun r))
+    <|> (do readSomething >>= \r -> cmdEnd >> return r)
+    <|> (do printSomething >>= \r -> cmdEnd >> return r)
+    <|> (do returnSomething >>= \r -> cmdEnd >> return r)
+    <|> (do ifBlock >>= \r -> return r)
+    <|> (do whileBlock >>= \r -> return r)
+    <|> (do r <- funCallCmd; cmdEnd; return r)
 
 parseIds =
-  try (do comma; id <- identifier; return id)
-    <|> do id <- identifier; return id
+       do id <- identifier; return id
+      <|> do comma; id <- identifier; return id
 
 varDec =
   do
     t <- typeAssert
     ids <- many1 parseIds
     cmdEnd
-    ret <- do return ( map (argConstruct t) ids)    
+    let ret = (map (argConstruct t) ids)
     return ret
 
 argConstruct t id = (id :#: t)
@@ -261,7 +266,7 @@ argDec =
     return (id :#: t)
 
 args =
-  try (do comma; arg <- argDec; return arg)
+  (do comma; arg <- argDec; return arg)
     <|> do arg <- argDec; return arg
 
 funBlock =
@@ -282,6 +287,7 @@ prog =
   do
     funBlks <- many funBlock
     mainBlk <- braces cmdBlock
+
     let funDecs = map first4 funBlks
         funScopes = map resto4 funBlks
         mainVars = fst mainBlk
@@ -290,7 +296,7 @@ prog =
 
 -- Parser Start
 
-partida = do comment; try (do r <- prog; eof; return r)
+partida = do comment; (do r <- prog; eof; return r)
 
 parserE = runParser partida [] "Expressoes"
 
