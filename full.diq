@@ -41,6 +41,8 @@ int id(int x)
             print(fatorial());}
         print(fatorial);
         fatorial(x,y,z);
+        a = 3;
+        a = "teste";
     }
     return 0;
 }
