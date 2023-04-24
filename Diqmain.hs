@@ -46,8 +46,7 @@ lingDef =
           "return",
           "if",
           "else",
-          "while",
-          ";"
+          "while"
         ]
     }
 
@@ -77,6 +76,7 @@ brackets = T.brackets lexico
 
 comma = T.comma lexico
 
+semi = T.semi lexico
 -- Expr
 
 binario name fun = Infix (do reservedOp name; return fun)
@@ -161,7 +161,6 @@ funCall = do id <- identifier; exs <- parens (many listExpr); return (Chamada id
 
 funCallCmd = do id <- identifier; exs <- parens (many listExpr); return (ChamadaFuncao id exs)
 
-cmdEnd = do reserved ";"
 
 atribOp = (do reservedOp "=" >> return Atrib)
 
@@ -228,13 +227,13 @@ whileBlock =
     return (cmd e actualBlk)
 
 cmd =
-  try (do atrib >>= \r -> cmdEnd >> return r)
-    <|> (do readSomething >>= \r -> cmdEnd >> return r)
-    <|> (do printSomething >>= \r -> cmdEnd >> return r)
-    <|> (do returnSomething >>= \r -> cmdEnd >> return r)
+  try (do atrib >>= \r -> semi >> return r)
+    <|> (do readSomething >>= \r -> semi >> return r)
+    <|> (do printSomething >>= \r -> semi >> return r)
+    <|> (do returnSomething >>= \r -> semi >> return r)
     <|> (do ifBlock >>= \r -> return r)
     <|> (do whileBlock >>= \r -> return r)
-    <|> (do r <- funCallCmd; cmdEnd; return r)
+    <|> (do r <- funCallCmd; semi; return r)
 
 parseIds =
        do id <- identifier; return id
@@ -244,7 +243,7 @@ varDec =
   do
     t <- typeAssert
     ids <- many1 parseIds
-    cmdEnd
+    semi
     let ret = (map (argConstruct t) ids)
     return ret
 
