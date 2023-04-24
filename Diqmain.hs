@@ -196,6 +196,12 @@ printSomething =
     return (pt e)
 
 ifCmd = do reserved "if" >> return If
+elseBlock = try(do
+                  reserved "else"
+                  blk2 <- braces cmdBlock
+                  let actualBlk2 = snd blk2
+                  return (actualBlk2))
+           <|> do return []
 ifBlock =
   do
     cmd <- ifCmd
@@ -203,15 +209,8 @@ ifBlock =
     blk <- braces cmdBlock
     --actualBlk <- do return (snd blk)
     let actualBlk = snd blk
-    try
-      (do
-          reserved "else"
-          blk2 <- braces cmdBlock
-          --actualBlk2 <- do return (snd blk2)
-          let actualBlk2 = snd blk2
-          return (cmd e actualBlk actualBlk2)
-      )
-      <|> return (cmd e actualBlk [])
+    ret <- elseBlock
+    return (cmd e actualBlk ret)
 
 whileCmd = do reserved "while" >> return While
 
