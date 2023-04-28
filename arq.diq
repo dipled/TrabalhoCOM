@@ -3,7 +3,7 @@ int vec (int s, double zzzz)
     int x;int y, z;
     void o;
     string s;
-    return 3;
+    return;
 }
 void vazio()
 {}
@@ -13,13 +13,13 @@ int id(int x)
     {
         if(2 == 3 && 3 == 5)
         {
-            return -2;
+            return;
         }
         else
         {
             read (d);
         }
-    return x;
+    return;
     }
 }
 
@@ -43,5 +43,5 @@ int id(int x)
         a = 3;
         a = "teste";
     }
-    return 0;
+    return 3; 
 }

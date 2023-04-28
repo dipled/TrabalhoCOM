@@ -77,6 +77,7 @@ brackets = T.brackets lexico
 comma = T.comma lexico
 
 semi = T.semi lexico
+
 -- Expr
 
 binario name fun = Infix (do reservedOp name; return fun)
@@ -154,7 +155,7 @@ typeAssert =
 
 -- Commands
 listExpr =
-     do e <- expr; return e
+  do e <- expr; return e
     <|> (do comma; e <- expr; return e)
 
 atrib =
@@ -171,10 +172,8 @@ readSomething =
     return (Leitura id)
 
 returnSomething =
-  do
-    reserved "return"
-    e <- expr
-    return (Ret e)
+  try (do reserved "return" >> expr >>= \e -> return (Ret (Just e)))
+    <|> do reserved "return" >> return (Ret (Nothing))
 
 printSomething =
   do
@@ -183,11 +182,11 @@ printSomething =
     return (Imp e)
 
 elseBlock =
-    do
-        reserved "else"
-        blk2 <- braces cmdBlock
-        let actualBlk2 = snd blk2
-        return (actualBlk2)
+  do
+    reserved "else"
+    blk2 <- braces cmdBlock
+    let actualBlk2 = snd blk2
+    return (actualBlk2)
     <|> do return []
 
 ifBlock =
@@ -208,17 +207,17 @@ whileBlock =
     return (While e actualBlk)
 
 cmd =
-   try (do atrib >>= \r -> semi >> return r)
+  try (do atrib >>= \r -> semi >> return r)
     <|> (do readSomething >>= \r -> semi >> return r)
     <|> (do printSomething >>= \r -> semi >> return r)
     <|> (do returnSomething >>= \r -> semi >> return r)
     <|> (do ifBlock >>= \r -> return r)
     <|> (do whileBlock >>= \r -> return r)
-    <|> (do id <- identifier; exs <- parens (many listExpr);semi;return (ChamadaFuncao id exs))
+    <|> (do id <- identifier; exs <- parens (many listExpr); semi; return (Proc id exs))
 
 parseIds =
-       do id <- identifier; return id
-      <|> do comma; id <- identifier; return id
+  do id <- identifier; return id
+    <|> do comma; id <- identifier; return id
 
 varDec =
   do

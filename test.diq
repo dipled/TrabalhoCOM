@@ -25,5 +25,5 @@ double somatorio(int a, double b, int c)
     }
     print("ola mundo");
     funcao (2+2, 3-2);
-    return 0;
+    return;
 }
