@@ -275,7 +275,7 @@ prog =
 
 -- Parser Start
 
-partida = do comment; (do r <- prog; eof; return r)
+partida = do comment; r <- prog; eof; return r
 
 parserE = runParser partida [] "Expressoes"
 
