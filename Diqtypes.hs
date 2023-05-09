@@ -5,5 +5,5 @@ type Id = String
 data Type = TDouble | TInt | TString | TVoid
     deriving Show
 
-data TCons = CDouble Double | CInt Integer | CString String
+data TCons = CDouble Double | CInt Integer
     deriving Show

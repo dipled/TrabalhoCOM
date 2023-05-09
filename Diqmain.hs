@@ -125,7 +125,14 @@ op =
 
 exprR =
   parens exprR
-    <|> do e1 <- expr; o <- op; e2 <- expr; return (o e1 e2)
+    <|> 
+    do 
+      e1 <- expr
+      o <- op
+      e2 <- expr
+      return (o e1 e2) {-Note que nesse caso, o "o" vem antes das duas
+                         expressoes, pois ele eh um construtor do tipo algebrico
+                         que recebe duas Expr e retorna uma ExprR -}
 
 -- ExprL
 

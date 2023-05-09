@@ -37,7 +37,7 @@ int id(int x)
             
         }
         if(a == b){
-            print(fatorial(5));}
+            print(vec(5,7));}
         print(soma);
         fatorial(x,y,z);
         a = 3;
