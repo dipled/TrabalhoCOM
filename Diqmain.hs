@@ -222,14 +222,12 @@ cmd =
     <|> (do whileBlock >>= \r -> return r)
     <|> (do id <- identifier; exs <- parens (many listExpr); semi; return (Proc id exs))
 
-parseIds =
-  do id <- identifier; return id
-    <|> do comma; id <- identifier; return id
+parseIds = sepBy1 identifier comma
 
 varDec =
   do
     t <- typeAssert
-    ids <- many1 parseIds
+    ids <- parseIds
     semi
     let ret = (map (argConstruct t) ids)
     return ret
@@ -251,15 +249,13 @@ argDec =
     id <- identifier
     return (id :#: t)
 
-args =
-  (do comma; arg <- argDec; return arg)
-    <|> do arg <- argDec; return arg
+args = sepBy argDec comma
 
 funBlock =
   do
     t <- typeAssert
     id <- identifier
-    as <- parens (many args)
+    as <- parens (args)
     blk <- braces cmdBlock
     let localVars = fst blk
         cmds = snd blk
