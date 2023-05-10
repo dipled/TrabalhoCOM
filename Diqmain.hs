@@ -98,7 +98,7 @@ constT =
         Right num -> return (Const (CDouble num))
   )
     <|> (do literalString >>= \lit -> return (Lit lit))
-    <|> try (do id <- identifier; exs <- parens (many listExpr); return (Chamada id exs))
+    <|> try (do id <- identifier; exs <- parens (listExpr); return (Chamada id exs))
     <|> (do identifier >>= \id -> return (IdVar id))
 
 fator =
@@ -161,9 +161,7 @@ typeAssert =
     <|> do reserved "void" >> return TVoid
 
 -- Commands
-listExpr =
-  do e <- expr; return e
-    <|> (do comma; e <- expr; return e)
+listExpr = sepBy expr comma
 
 atrib =
   do
@@ -220,7 +218,7 @@ cmd =
     <|> (do returnSomething >>= \r -> semi >> return r)
     <|> (do ifBlock >>= \r -> return r)
     <|> (do whileBlock >>= \r -> return r)
-    <|> (do id <- identifier; exs <- parens (many listExpr); semi; return (Proc id exs))
+    <|> (do id <- identifier; exs <- parens (listExpr); semi; return (Proc id exs))
 
 parseIds = sepBy1 identifier comma
 
