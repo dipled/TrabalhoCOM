@@ -19,34 +19,15 @@ lingDef =
       T.commentEnd = "-}",
       T.commentLine = "--",
       T.reservedOpNames =
-        [ "+",
-          "-",
-          "/",
-          "*",
-          "==",
-          ">=",
-          "<=",
-          ">",
-          "<",
-          "/=",
-          "&&",
-          "||",
-          "!",
-          "="
-        ],
+        [ "+","-","/","*","==",">=",
+          "<=",">","<","/=","&&",
+          "||","!","="],
       T.identStart = letter <|> char '_',
       T.identLetter = alphaNum <|> char '_',
       T.reservedNames =
-        [ "int",
-          "double",
-          "string",
-          "void",
-          "read",
-          "print",
-          "return",
-          "if",
-          "else",
-          "while"
+        [ "int","double","string","void",
+        "read","print","return","if",
+        "else","while"
         ]
     }
 
