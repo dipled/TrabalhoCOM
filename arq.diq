@@ -1,7 +1,7 @@
 int vec (int s, double zzzz)
 {
     int x;int y, z;
-    void o;
+    double o;
     string s;
     return;
 }
@@ -24,7 +24,7 @@ int id(int x)
 }
 
 {
-    void escolha;
+    double escolha;
     escolha = 1;
     while(escolha == 1)
     {

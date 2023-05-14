@@ -1,6 +1,6 @@
 double somatorio(int a, double b, int c)
 {
-    void lol;
+    double lol;
     while(c > 0)
     {
         c = c - 1;

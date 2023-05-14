@@ -139,6 +139,11 @@ typeAssert =
   do reserved "int" >> return TInt
     <|> do reserved "double" >> return TDouble
     <|> do reserved "string" >> return TString
+
+returnType = 
+  do reserved "int" >> return TInt
+    <|> do reserved "double" >> return TDouble
+    <|> do reserved "string" >> return TString
     <|> do reserved "void" >> return TVoid
 
 -- Commands
@@ -218,7 +223,7 @@ cmdBlock =
     vars <- many varDec
     let varList = concat vars
     cmds <- many cmd
-    return (varList, cmds)
+    return (concat vars, cmds)
 
 -- Program :33
 
@@ -232,25 +237,21 @@ args = sepBy argDec comma
 
 funBlock =
   do
-    t <- typeAssert
+    t <- returnType
     id <- identifier
     as <- parens (args)
     blk <- braces cmdBlock
     let localVars = fst blk
         cmds = snd blk
-    return (id :->: (as, t), id, localVars, cmds)
-
-first4 (a, b, c, d) = a
-
-resto4 (a, b, c, d) = (b, c, d)
+    return (id :->: (as, t),( id, localVars, cmds))
 
 prog =
   do
     funBlks <- many funBlock
     mainBlk <- braces cmdBlock
 
-    let funDecs = map first4 funBlks
-        funScopes = map resto4 funBlks
+    let funDecs =  map fst funBlks
+        funScopes = map snd funBlks
         mainVars = fst mainBlk
         actualMain = snd mainBlk
     return (Prog funDecs funScopes mainVars actualMain)
