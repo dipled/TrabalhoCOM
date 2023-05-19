@@ -6,7 +6,13 @@ int vec (int s, double zzzz)
     return;
 }
 void vazio()
-{}
+{
+    int teste;
+    if(a==b)
+    {
+        fatorial();
+    }
+}
 int id(int x)
 {
     while(escolha == 1)

@@ -176,8 +176,7 @@ elseBlock =
   do
     reserved "else"
     blk2 <- braces cmdBlock
-    let actualBlk2 = snd blk2
-    return (actualBlk2)
+    return (blk2)
     <|> do return []
 
 ifBlock =
@@ -185,17 +184,15 @@ ifBlock =
     reserved "if"
     e <- parens exprL
     blk <- braces cmdBlock
-    let actualBlk = snd blk
     ret <- elseBlock
-    return (If e actualBlk ret)
+    return (If e blk ret)
 
 whileBlock =
   do
     reserved "while"
     e <- parens exprL
     blk <- braces cmdBlock
-    let actualBlk = snd blk
-    return (While e actualBlk)
+    return (While e blk)
 
 cmd =
   try (do atrib >>= \r -> semi >> return r)
@@ -218,13 +215,17 @@ varDec =
 
 argConstruct t id = (id :#: t)
 
-cmdBlock =
+varBlock = 
   do
     vars <- many varDec
-    let varList = concat vars
-    cmds <- many cmd
-    return (concat vars, cmds)
+    return(concat vars)
 
+cmdBlock =
+  do
+    cmds <- many cmd
+    return cmds
+  
+completeBlock = do{vars <- varBlock; cmds <- cmdBlock; return(vars,cmds)}
 -- Program :33
 
 argDec =
@@ -240,7 +241,7 @@ funBlock =
     t <- returnType
     id <- identifier
     as <- parens (args)
-    blk <- braces cmdBlock
+    blk <- braces completeBlock
     let localVars = fst blk
         cmds = snd blk
     return (id :->: (as, t),( id, localVars, cmds))
@@ -248,7 +249,7 @@ funBlock =
 prog =
   do
     funBlks <- many funBlock
-    mainBlk <- braces cmdBlock
+    mainBlk <- braces completeBlock
 
     let funDecs =  map fst funBlks
         funScopes = map snd funBlks
