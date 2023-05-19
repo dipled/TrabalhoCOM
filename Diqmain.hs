@@ -19,16 +19,11 @@ lingDef =
       T.commentEnd = "-}",
       T.commentLine = "--",
       T.reservedOpNames =
-        [ "+","-","/","*","==",">=",
-          "<=",">","<","/=","&&",
-          "||","!","="],
+        ["+", "-", "/", "*", "==", ">=", "<=", ">", "<", "/=", "&&", "||", "!", "="],
       T.identStart = letter <|> char '_',
       T.identLetter = alphaNum <|> char '_',
       T.reservedNames =
-        [ "int","double","string","void",
-        "read","print","return","if",
-        "else","while"
-        ]
+        ["int", "double", "string", "void", "read", "print", "return", "if", "else", "while"]
     }
 
 lexico = T.makeTokenParser lingDef
@@ -106,14 +101,9 @@ op =
 
 exprR =
   parens exprR
-    <|> 
-    do 
-      e1 <- expr
-      o <- op
-      e2 <- expr
-      return (o e1 e2) {-Note que nesse caso, o "o" vem antes das duas
-                         expressoes, pois ele eh um construtor do tipo algebrico
-                         que recebe duas Expr e retorna uma ExprR -}
+    <|> do e1 <- expr; o <- op; e2 <- expr; return (o e1 e2) {-Note que nesse caso, o "o" vem antes das duas
+                                                              expressoes, pois ele eh um construtor do tipo algebrico
+                                                              que recebe duas Expr e retorna uma ExprR -}
 
 -- ExprL
 
@@ -140,7 +130,7 @@ typeAssert =
     <|> do reserved "double" >> return TDouble
     <|> do reserved "string" >> return TString
 
-returnType = 
+returnType =
   do reserved "int" >> return TInt
     <|> do reserved "double" >> return TDouble
     <|> do reserved "string" >> return TString
@@ -149,43 +139,21 @@ returnType =
 -- Commands
 listExpr = sepBy expr comma
 
-atrib =
-  do
-    id <- identifier
-    reservedOp "="
-    e <- expr
-    return (Atrib id e)
+atrib = do id <- identifier; reservedOp "="; e <- expr; return (Atrib id e)
 
-readSomething =
-  do
-    reserved "read"
-    id <- parens identifier
-    return (Leitura id)
+readSomething = do reserved "read"; id <- parens identifier; return (Leitura id)
 
 returnSomething =
   try (do reserved "return" >> expr >>= \e -> return (Ret (Just e)))
     <|> do reserved "return" >> return (Ret (Nothing))
 
-printSomething =
-  do
-    reserved "print"
-    e <- parens expr
-    return (Imp e)
+printSomething = do reserved "print"; e <- parens expr; return (Imp e)
 
 elseBlock =
-  do
-    reserved "else"
-    blk2 <- braces cmdBlock
-    return (blk2)
+  do reserved "else"; blk2 <- braces cmdBlock; return (blk2)
     <|> do return []
 
-ifBlock =
-  do
-    reserved "if"
-    e <- parens exprL
-    blk <- braces cmdBlock
-    ret <- elseBlock
-    return (If e blk ret)
+ifBlock = do reserved "if"; e <- parens exprL; blk <- braces cmdBlock; ret <- elseBlock; return (If e blk ret)
 
 whileBlock =
   do
@@ -205,34 +173,19 @@ cmd =
 
 parseIds = sepBy1 identifier comma
 
-varDec =
-  do
-    t <- typeAssert
-    ids <- parseIds
-    semi
-    let ret = (map (argConstruct t) ids)
-    return ret
+varDec = do t <- typeAssert; ids <- parseIds; semi; return (map (argConstruct t) ids)
 
 argConstruct t id = (id :#: t)
 
-varBlock = 
-  do
-    vars <- many varDec
-    return(concat vars)
+varBlock = do vars <- many varDec; return (concat vars)
 
-cmdBlock =
-  do
-    cmds <- many cmd
-    return cmds
-  
-completeBlock = do{vars <- varBlock; cmds <- cmdBlock; return(vars,cmds)}
+cmdBlock = do cmds <- many cmd; return cmds
+
+completeBlock = do vars <- varBlock; cmds <- cmdBlock; return (vars, cmds)
+
 -- Program :33
 
-argDec =
-  do
-    t <- typeAssert
-    id <- identifier
-    return (id :#: t)
+argDec = do t <- typeAssert; id <- identifier; return (id :#: t)
 
 args = sepBy argDec comma
 
@@ -244,14 +197,13 @@ funBlock =
     blk <- braces completeBlock
     let localVars = fst blk
         cmds = snd blk
-    return (id :->: (as, t),( id, localVars, cmds))
+    return (id :->: (as, t), (id, localVars, cmds))
 
 prog =
   do
     funBlks <- many funBlock
     mainBlk <- braces completeBlock
-
-    let funDecs =  map fst funBlks
+    let funDecs = map fst funBlks
         funScopes = map snd funBlks
         mainVars = fst mainBlk
         actualMain = snd mainBlk
@@ -259,7 +211,7 @@ prog =
 
 -- Parser Start
 
-partida = do comment; r <- prog; eof; return r
+partida = do r <- prog; eof; return r
 
 parserE = runParser partida [] "Expressoes"
 

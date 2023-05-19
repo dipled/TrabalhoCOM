@@ -1,8 +1,16 @@
 int vec (int s, double zzzz)
 {
+    --teste
+    {-teste comentairoawjdajsid
+    
+    -}
     int x;int y, z;
     double o;
     string s;
+     --teste
+    {-teste comentairoawjdajsid
+    
+    -}
     return;
 }
 void vazio()
@@ -45,6 +53,10 @@ int id(int x)
         if(a == b){
             print(vec(5,7));}
         print(soma);
+         --teste
+    {-teste comentairoawjdajsid
+    
+    -}
         fatorial(x,y,z);
         a = 3;
         a = "teste";

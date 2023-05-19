@@ -1,5 +1,6 @@
 double somatorio(int a, double b, int c)
 {
+    --TESTE
     double lol;
     while(c > 0)
     {
