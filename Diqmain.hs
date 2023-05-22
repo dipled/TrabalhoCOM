@@ -27,35 +27,21 @@ lingDef =
     }
 
 lexico = T.makeTokenParser lingDef
-
 intOrDouble = T.naturalOrFloat lexico
-
 symbol = T.symbol lexico
-
 parens = T.parens lexico
-
 reservedOp = T.reservedOp lexico
-
 identifier = T.identifier lexico
-
 literalString = T.stringLiteral lexico
-
 reserved = T.reserved lexico
-
 comment = T.whiteSpace lexico
-
 braces = T.braces lexico
-
 angles = T.angles lexico
-
 brackets = T.brackets lexico
-
 comma = T.comma lexico
-
 semi = T.semi lexico
 
 -- Expr
-
 binario name fun = Infix (do reservedOp name; return fun)
 
 prefix name fun = Prefix (do reservedOp name; return fun)
@@ -87,10 +73,8 @@ expr =
     <?> "expression"
 
 -- ExprR
-
 -- Note that we don't need to make a table, nor use buildExpressionParser for ExprR,
 -- because all operators have the same precedence level
-
 op =
   do reservedOp "==" >> return (:==:)
     <|> do reservedOp ">=" >> return (:>=:)
@@ -101,12 +85,11 @@ op =
 
 exprR =
   parens exprR
-    <|> do e1 <- expr; o <- op; e2 <- expr; return (o e1 e2) {-Note que nesse caso, o "o" vem antes das duas
-                                                              expressoes, pois ele eh um construtor do tipo algebrico
-                                                              que recebe duas Expr e retorna uma ExprR -}
+    <|> do e1 <- expr; o <- op; e2 <- expr; return (o e1 e2 {-Note que nesse caso, o "o" vem antes das duas
+                                                             expressoes, pois ele eh um construtor do tipo algebrico
+                                                             que recebe duas Expr e retorna uma ExprR -})
 
 -- ExprL
-
 tabelaL =
   [ [prefix "!" Not],
     [binarioL "&&" (:&:) AssocLeft],
@@ -124,7 +107,6 @@ fatorL =
 exprL = buildExpressionParser tabelaL fatorL
 
 -- Var declaration and func
-
 typeAssert =
   do reserved "int" >> return TInt
     <|> do reserved "double" >> return TDouble
@@ -184,7 +166,6 @@ cmdBlock = do cmds <- many cmd; return cmds
 completeBlock = do vars <- varBlock; cmds <- cmdBlock; return (vars, cmds)
 
 -- Program :33
-
 argDec = do t <- typeAssert; id <- identifier; return (id :#: t)
 
 args = sepBy argDec comma
@@ -210,7 +191,6 @@ prog =
     return (Prog funDecs funScopes mainVars actualMain)
 
 -- Parser Start
-
 partida = do r <- prog; eof; return r
 
 parserE = runParser partida [] "Expressoes"
