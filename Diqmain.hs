@@ -178,7 +178,7 @@ funBlock =
     blk <- braces completeBlock
     let localVars = fst blk
         cmds = snd blk
-    return (id :->: (as, t), (id, localVars, cmds))
+    return (id :->: (as ++ localVars, t), (id, as ++ localVars, cmds))
 
 prog =
   do
@@ -201,5 +201,5 @@ parserExpr s = case parserE s of
 
 main =
   do
-    e <- readFile "arq.diq"
+    e <- readFile "teste1.j--"
     parserExpr e
