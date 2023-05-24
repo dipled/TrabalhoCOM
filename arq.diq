@@ -23,7 +23,7 @@ void vazio()
 }
 int id(int x)
 {
-    while(escolha == 1)
+    while(escolha == -1)
     {
         if(2 == 3 && 3 == 5)
         {

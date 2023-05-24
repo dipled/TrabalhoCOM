@@ -12,7 +12,7 @@ int fat (int n)
   int f;
   
   f = 0;
-  while (n > 0)
+  while (n > -1)
   { 
     f = f * n;
     n = n - 1;
