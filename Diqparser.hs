@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use concat" #-}
-module Diqmain where
+module Diqparser where
 
 import Diqcode
 import Diqtypes

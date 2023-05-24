@@ -5,6 +5,7 @@ data Var = Id :#: Type
   deriving (Show)
 
 data Funcao = Id :->: ([Var], Type) 
+
   deriving (Show)
 
 data Programa = Prog [Funcao] [(Id, [Var], Bloco)] [Var] Bloco 
