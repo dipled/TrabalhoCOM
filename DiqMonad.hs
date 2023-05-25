@@ -6,7 +6,6 @@ instance Functor ErrorM where
     fmap f (MS (s,a)) = MS(s,f a)
 
 instance Applicative ErrorM where
-    pure :: a -> ErrorM a
     pure x = MS ("",x)
     MS(s1,f) <*> MS (s2,x) = MS(s1<>s2,f x)
 
