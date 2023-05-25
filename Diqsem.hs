@@ -36,16 +36,11 @@ verExpr ((id :#: t):xs) (MS(s,(IdVar v)))
     |otherwise = verExpr xs (MS(s,(IdVar v)))
 
 
-verExpr tab (MS(s,(e1 :+: e2))) =
-   do
-       let (MS(s1,(t1,e1'))) = verExpr tab (MS(s,e1))
-       let (MS(s2,(t2,e2'))) = verExpr tab (MS(s,e2))
-       case (t1, t2) of
-        (TInt, TInt) -> MS(s1++s2,(TInt, e1' :+: e2'))
-        (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :+: e2'))
-        (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :+: e2'))
- 
-        
-
-
-        
+verExpr tab (MS(s,((e1 :+: e2)))) =
+    do
+        let MS(s1,(t1,e1')) = verExpr tab (MS(s,e1))
+            MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
+        case (t1, t2) of
+            (TInt, TInt) -> MS(s1++s2,(TInt, e1' :+: e2'))
+            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :+: e2'))
+            (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :+: e2'))
