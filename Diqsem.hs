@@ -29,19 +29,23 @@ verExpr tab (MS(s,(Const (CDouble d)))) = MS(s,(TDouble,(Const (CDouble d))))
 
 verExpr tab (MS(s,(Lit v))) = MS(s,(TString,(Lit v)))
 
-verExpr [] (MS(s,(IdVar v))) = erro (s++"Variavel nao encontrada") (TInt,IdVar v)
+verExpr ((fn :->: ([],ft)):ys) (MS(s,(IdVar v))) = erro (s++"Variavel nao encontrada") (TInt,IdVar v)
 
-verExpr ((id :#: t):xs) (MS(s,(IdVar v)))
+verExpr ((fn :->: ((id :#: t):xs,ft)):ys) (MS(s,(IdVar v)))
     |v == id = MS(s,(t, (IdVar v)))
-    |otherwise = verExpr xs (MS(s,(IdVar v)))
+    |otherwise = verExpr ((fn :->: (xs,ft)):ys) (MS(s,(IdVar v)))
 
+verExpr [] (MS(s,(Chamada fid args))) = erro (s++"Variavel nao encontrada") (TInt,(Chamada fid args)) 
+verExpr ((fn :->: ((id :#: t):xs,ft)):ys) (MS(s,(Chamada fid args))) 
+    |fid == fn = (MS(s,(ft,Chamada fid args)))
+    |otherwise = verExpr ys (MS(s,(Chamada fid args)))
 verExpr tab (MS(s,(Neg e))) = 
     do
         let MS(s1,(t,e')) = verExpr tab (MS(s,e))
         case t of
             (TInt) -> MS(s1,(t,Neg e))
             (TDouble) -> MS(s1,(t,Neg e))
-            _ -> MS(s1++"Erro de tipo na tentativa de Negar a expressao",(t,Neg e))
+            _ -> erro(s1++"Erro de tipo na tentativa de Negar a expressao") (t,Neg e)
 
 verExpr tab (MS(s,((e1 :+: e2)))) =
     do
@@ -51,8 +55,8 @@ verExpr tab (MS(s,((e1 :+: e2)))) =
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :+: e2'))
             (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :+: e2'))
             (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :+: e2'))
-            (TString, _) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :+: e2')) 
-            (_, TString) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :+: e2')) 
+            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :+: e2')
+            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :+: e2')
             
 
 verExpr tab (MS(s,((e1 :-: e2)))) =
@@ -63,8 +67,8 @@ verExpr tab (MS(s,((e1 :-: e2)))) =
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :-: e2'))
             (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :-: e2'))
             (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :-: e2'))
-            (TString, _) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :-: e2')) 
-            (_, TString) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :-: e2'))
+            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :-: e2') 
+            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :-: e2')
 
 verExpr tab (MS(s,((e1 :*: e2)))) =
     do
@@ -74,8 +78,8 @@ verExpr tab (MS(s,((e1 :*: e2)))) =
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :*: e2'))
             (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :*: e2'))
             (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :*: e2'))
-            (TString, _) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :*: e2')) 
-            (_, TString) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :*: e2'))
+            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :*: e2') 
+            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :*: e2')
 
 verExpr tab (MS(s,((e1 :/: e2)))) =
     do
@@ -85,5 +89,5 @@ verExpr tab (MS(s,((e1 :/: e2)))) =
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :/: e2'))
             (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :/: e2'))
             (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :/: e2'))
-            (TString, _) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :/: e2')) 
-            (_, TString) -> MS(s1++s2++"Tipo String nao compativel com operacao",(TString, e1' :/: e2'))
+            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :/: e2') 
+            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :/: e2')
