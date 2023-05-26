@@ -8,7 +8,7 @@ double maior (double a, double b)
 double menor(double p, double l)
 {
   double h;
-  h = menor(p, l);
+  h = maior(p, l);
 }
 
 {

@@ -11,6 +11,10 @@ verArgs ((id:#:t):xs) ((MS(s,(tp,e))):es) =
     do
         if tp == t then s++verArgs xs es
         else s++"Erro: Tipos nao correspondentes na chamada da funcao\n" ++ verArgs xs es
+verFunType ([],_) (MS(s,(Chamada fid args))) = erro (s++"Funcao " ++ fid ++  " nao encontrada\n") (TVoid,(Chamada fid args)) 
+verFunType (((fi:->:(as,ft)):ys),vars) (MS(s,(Chamada fid args))) =
+    if fi == fid then (MS(s,(ft,Chamada fid args)))
+    else verExpr (ys,vars) (MS(s,(Chamada fid args)))
 
 verExpr tab (MS(s,(Const(CInt i)))) = MS(s,(TInt,(Const (CInt i))))
 verExpr tab (MS(s,(Const (CDouble d)))) = MS(s,(TDouble,(Const (CDouble d))))
@@ -27,11 +31,11 @@ verExpr (fns, ((id:#:t):vs)) (MS(s,(IdVar v)))
 verExpr ([],_) (MS(s,(Chamada fid args))) = erro (s++"Funcao " ++ fid ++  " nao encontrada\n") (TVoid,(Chamada fid args)) 
 verExpr (((fi:->:(as,ft)):ys),vars) (MS(s,(Chamada fid args))) =
     do
-        let actualArgs = map makeArg (args)
-            actualActualArgs = map (verExpr (((fi:->:(as,ft)):ys),vars)) actualArgs
-            sr = verArgs as actualActualArgs
-        if fi == fid then (MS(s++sr,(ft,Chamada fid args)))
-        else verExpr (ys,vars) (MS(s,(Chamada fid args)))
+        let (MS(s1,(t,Chamada fid1 args1))) = verFunType (((fi:->:(as,ft)):ys),vars) (MS(s,(Chamada fid args)))
+        let arguments = map (makeArg) args
+        let actualArgs = map (verExpr  (((fi:->:(as,ft)):ys),vars)) arguments
+        let sr = verArgs as actualArgs
+        (MS(s++sr,(ft,Chamada fid args)))
 
                     
 
