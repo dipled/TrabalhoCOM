@@ -23,7 +23,7 @@ import Diqmonad
 --         (TInt, TInt) -> (TInt, e1' :+: e2')
 --         (TDouble, TInt) -> (TDouble, e1' :+: e2')
 --         (TInt, TDouble) -> (TDouble, e1' :+: e2')
-        
+
 verExpr tab (MS(s,(Const(CInt i)))) = MS(s,(TInt,(Const (CInt i))))
 verExpr tab (MS(s,(Const (CDouble d)))) = MS(s,(TDouble,(Const (CDouble d))))
 
@@ -53,8 +53,8 @@ verExpr tab (MS(s,((e1 :+: e2)))) =
             MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
         case (t1, t2) of
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :+: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :+: e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :+: e2'))
+            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :+: IntDouble e2'))
+            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :+: e2'))
             (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :+: e2')
             (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :+: e2')
             
@@ -65,8 +65,8 @@ verExpr tab (MS(s,((e1 :-: e2)))) =
             MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
         case (t1, t2) of
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :-: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :-: e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :-: e2'))
+            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :-: IntDouble e2'))
+            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :-: e2'))
             (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :-: e2') 
             (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :-: e2')
 
@@ -76,8 +76,8 @@ verExpr tab (MS(s,((e1 :*: e2)))) =
             MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
         case (t1, t2) of
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :*: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :*: e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :*: e2'))
+            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :*: IntDouble e2'))
+            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :*: e2'))
             (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :*: e2') 
             (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :*: e2')
 
@@ -87,7 +87,7 @@ verExpr tab (MS(s,((e1 :/: e2)))) =
             MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
         case (t1, t2) of
             (TInt, TInt) -> MS(s1++s2,(TInt, e1' :/: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :/: e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, e1' :/: e2'))
+            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :/: IntDouble e2'))
+            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :/: e2'))
             (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :/: e2') 
             (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :/: e2')
