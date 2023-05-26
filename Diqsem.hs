@@ -4,17 +4,25 @@ import Diqtypes
 import Diqxpressions
 import Diqmonad
 
-makeArg arg = MS("",arg)
-verArgs [] [] = ""
-verArgs _ [] = "Erro: Numero de argumentos errados\n"
-verArgs ((id:#:t):xs) ((MS(s,(tp,e))):es) =
-    do
-        if tp == t then s++verArgs xs es
-        else s++"Erro: Tipos nao correspondentes na chamada da funcao\n" ++ verArgs xs es
+-- makeArg arg = MS("",arg)
+-- verArgs [] [] = ([],"")
+-- verArgs [] ((MS(s,(tp,e))):es) ="Erro: Faltam argumentos na chamada da funcao\n"++s
+
+-- verArgs ((id:#:t):xs) ((MS(s,(tp,e))):es) =
+--     do
+--         case (t,tp) of 
+--             (TInt, TDouble) -> "Adv: Atribuicao de Int para Double" ++
+--             (TDouble,TInt) -> ((tp,IntDouble e):fst(verArgs xs es),"Adv: Atribuicao de Double para Int "++ snd(verArgs xs es)++s)
+--             (TString, TString) -> ((tp,e):fst(verArgs xs es),snd(verArgs xs es)++s)
+--             (TDouble, TDouble ) -> ((tp,e):fst(verArgs xs es),snd(verArgs xs es)++s)
+--             (TInt, TInt) -> ((tp,e):fst(verArgs xs es),snd(verArgs xs es)++s)
+--             (_,_) -> ((tp,e):fst(verArgs xs es),"Erro: Tipos incompativeis na chamada de funcao"++ snd(verArgs xs es)++s)
+
+
 verFunType ([],_) (MS(s,(Chamada fid args))) = erro (s++"Funcao " ++ fid ++  " nao encontrada\n") (TVoid,(Chamada fid args)) 
 verFunType (((fi:->:(as,ft)):ys),vars) (MS(s,(Chamada fid args))) =
     if fi == fid then (MS(s,(ft,Chamada fid args)))
-    else verExpr (ys,vars) (MS(s,(Chamada fid args)))
+    else verFunType (ys,vars) (MS(s,(Chamada fid args)))
 
 verExpr tab (MS(s,(Const(CInt i)))) = MS(s,(TInt,(Const (CInt i))))
 verExpr tab (MS(s,(Const (CDouble d)))) = MS(s,(TDouble,(Const (CDouble d))))
@@ -32,10 +40,12 @@ verExpr ([],_) (MS(s,(Chamada fid args))) = erro (s++"Funcao " ++ fid ++  " nao 
 verExpr (((fi:->:(as,ft)):ys),vars) (MS(s,(Chamada fid args))) =
     do
         let (MS(s1,(t,Chamada fid1 args1))) = verFunType (((fi:->:(as,ft)):ys),vars) (MS(s,(Chamada fid args)))
-        let arguments = map (makeArg) args
-        let actualArgs = map (verExpr  (((fi:->:(as,ft)):ys),vars)) arguments
-        let sr = verArgs as actualArgs
-        (MS(s++sr,(ft,Chamada fid args)))
+            arguments = map (makeArg) args
+            actualArgs = map (verExpr (((fi:->:(as,ft)):ys),vars)) arguments
+            argTuple = verArgs as actualArgs
+            sr = snd argTuple
+            ar = fst argTuple
+        (MS(s,(ft,Chamada fid ar)))
 
                     
 
