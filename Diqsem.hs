@@ -27,12 +27,15 @@ verExpr (fns,(fid,((id:#:t):xs),blk):zs) (MS(s,(IdVar v)))
 
 verExpr ([],_) (MS(s,(Chamada fid args))) = erro (s++"Funcao " ++ fid ++  " nao encontrada\n") (TVoid,(Chamada fid args)) 
 verExpr (((fi:->:(vars,ft)):ys),(fn,((id:#:t):xs),blk):zs) (MS(s,(Chamada fid args))) =
-    do
-        let actualArgs = map makeArg (args)
-            actualActualArgs = map (verExpr (((fi:->:(vars,ft)):ys),(fn,((id:#:t):xs),blk):zs)) actualArgs
-            sr = verArgs vars actualActualArgs
-        if fid == fn then (MS(s++sr,(ft,Chamada fid args)))
-        else verExpr (ys,zs) (MS(s++sr,(Chamada fid args)))
+        if fid == fn 
+        then 
+            do 
+                let actualArgs = map makeArg (args)
+                    actualActualArgs = map (verExpr (((fi:->:(vars,ft)):ys),(fn,((id:#:t):xs),blk):zs)) actualArgs
+                    sr = verArgs vars actualActualArgs
+                return (ft,Chamada fid args)
+                    
+        else verExpr (ys,zs) (MS(s,(Chamada fid args)))
 
 verExpr tab (MS(s,(Neg e))) = 
     do
@@ -102,7 +105,15 @@ verExpr tab (MS(s,((e1 :/: e2)))) =
 
 verCmd tab (MS(s, (Atrib id e))) = 
     do 
-        let MS(s1, (t1,e1)) = verExpr tab (MS("", e))
-            MS(s2, (t2,e2)) = verExpr tab (MS("", IdVar id))
-        if t1 == t2 then (MS(s++s1++s2,(Atrib id e1)))
-        else erro("Atribuicao invalida\n"++s++s1++s2)(Atrib id e1)
+        let MS(s1, (t1,e1)) = verExpr tab (MS("", IdVar id))
+            MS(s2, (t2,e2)) = verExpr tab (MS("", e))
+        case (t1,t2) of 
+            (TInt, TDouble) -> adv("Atribuicao de Double para Int \n"++s++s1++s2)(Atrib id (DoubleInt e2))
+            (TDouble, TInt) -> adv("Atribuicao de Int para Double \n"++s++s1++s2)(Atrib id (IntDouble e2))
+            (TString,TString) -> (MS(s++s1++s2,(Atrib id e2)))
+            (TString, _) -> erro("Atribuicao invalida\n"++s++s1++s2)(Atrib id e2)
+            (_,TString) -> erro("Atribuicao invalida\n"++s++s1++s2)(Atrib id e2)
+            (TVoid,_ ) -> erro("Atribuicao invalida\n"++s++s1++s2)(Atrib id e2)
+            (_,TVoid) -> erro("Atribuicao invalida\n"++s++s1++s2)(Atrib id e2)
+            (TDouble, TDouble) -> (MS(s++s1++s2,(Atrib id e2)))
+            (TInt,TInt) -> (MS(s++s1++s2,(Atrib id e2)))

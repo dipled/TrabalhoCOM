@@ -4,7 +4,11 @@ double maior (double a, double b)
   string v;
   double x, z;
   a = maior (x, z);
-
+}
+double menor(double p, double l)
+{
+  double h;
+  h = menor(p, l);
 }
 
 {
