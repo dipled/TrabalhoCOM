@@ -3,103 +3,106 @@ import Diqcode
 import Diqtypes
 import Diqxpressions
 import Diqmonad
--- verProg (Prog tf fs tv b) = 
---     do
--- verExpr tab (Const(CInt i)) = (TInt,(Const (CInt i)))
 
--- verExpr tab (Const (CDouble d)) = (TDouble,(Const (CDouble d)))
-  
--- verExpr tab (Lit s) = (TString,(Lit s))
--- -- verExpr [] (IdVar s) = erro "Variavel nao encontrada no escopo" (IdVar s)
--- verExpr ((id :#: t):xs) (IdVar s)
---     |s == id = (t, (IdVar s))
---     |otherwise = verExpr xs (IdVar s)
-
--- verExpr tab (e1 :+: e2) =
---    do
---        let (t1,e1') = verExpr tab e1
---        let (t2,e2') = verExpr tab e2
---        case (t1, t2) of
---         (TInt, TInt) -> (TInt, e1' :+: e2')
---         (TDouble, TInt) -> (TDouble, e1' :+: e2')
---         (TInt, TDouble) -> (TDouble, e1' :+: e2')
+makeArg arg = MS("",arg)
+verArgs [] [] = ""
+verArgs _ [] = "Erro: Numero de argumentos errados\n"
+verArgs ((id:#:t):xs) ((MS(s,(tp,e))):es) =
+    do
+        if tp == t then s++verArgs xs es
+        else s++"Erro: Tipos nao correspondentes na chamada da funcao\n" ++ verArgs xs es
 
 verExpr tab (MS(s,(Const(CInt i)))) = MS(s,(TInt,(Const (CInt i))))
 verExpr tab (MS(s,(Const (CDouble d)))) = MS(s,(TDouble,(Const (CDouble d))))
 
 verExpr tab (MS(s,(Lit v))) = MS(s,(TString,(Lit v)))
 
-verExpr ((fn :->: ([],ft)):ys) (MS(s,(IdVar v))) = erro (s++"Variavel nao encontrada") (TVoid,IdVar v)
-
-verExpr ((fn :->: ((id :#: t):xs,ft)):ys) (MS(s,(IdVar v)))
+verExpr (fns,[]) (MS(s,(IdVar v))) = erro ("Variavel " ++ v ++ " nao encontrada\n"++s) (TVoid,IdVar v)
+verExpr (fns,(fid,[],blk):zs) (MS(s,(IdVar v))) = verExpr (fns,zs) (MS(s,(IdVar v)))
+verExpr (fns,(fid,((id:#:t):xs),blk):zs) (MS(s,(IdVar v)))
     |v == id = MS(s,(t, (IdVar v)))
-    |otherwise = verExpr ((fn :->: (xs,ft)):ys) (MS(s,(IdVar v)))
+    |otherwise = verExpr (fns,(fid,xs,blk):zs) (MS(s,(IdVar v)))
 
-verExpr [] (MS(s,(Chamada fid args))) = erro (s++"Funcao nao encontrada") (TVoid,(Chamada fid args)) 
-verExpr ((fn :->: (vars,ft)):ys) (MS(s,(Chamada fid args))) 
-    |fid == fn = (MS(s,(ft,Chamada fid args)))
-    |otherwise = verExpr ys (MS(s,(Chamada fid args)))
+
+
+verExpr ([],_) (MS(s,(Chamada fid args))) = erro (s++"Funcao " ++ fid ++  " nao encontrada\n") (TVoid,(Chamada fid args)) 
+verExpr (((fi:->:(vars,ft)):ys),(fn,((id:#:t):xs),blk):zs) (MS(s,(Chamada fid args))) =
+    do
+        let actualArgs = map makeArg (args)
+            actualActualArgs = map (verExpr (((fi:->:(vars,ft)):ys),(fn,((id:#:t):xs),blk):zs)) actualArgs
+            sr = verArgs vars actualActualArgs
+        if fid == fn then (MS(s++sr,(ft,Chamada fid args)))
+        else verExpr (ys,zs) (MS(s++sr,(Chamada fid args)))
+
 verExpr tab (MS(s,(Neg e))) = 
     do
-        let MS(s1,(t,e')) = verExpr tab (MS(s,e))
+        let MS(s1,(t,e')) = verExpr tab (MS("",e))
         case t of
             (TInt) -> MS(s1,(t,Neg e))
             (TDouble) -> MS(s1,(t,Neg e))
-            _ -> erro(s1++"Erro de tipo na tentativa de Negar a expressao") (t,Neg e)
+            _ -> erro("Erro de tipo na tentativa de Negar a expressao\n"++s) (t,Neg e)
 
 verExpr tab (MS(s,((e1 :+: e2)))) =
     do
-        let MS(s1,(t1,e1')) = verExpr tab (MS(s,e1))
-            MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
+        let MS(s1,(t1,e1')) = verExpr tab (MS("",e1))
+            MS(s2,(t2,e2')) = verExpr tab (MS("",e2))
         case (t1, t2) of
-            (TInt, TInt) -> MS(s1++s2,(TInt, e1' :+: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :+: IntDouble e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :+: e2'))
-            (TDouble, TDouble) -> MS(s1++s2,(TDouble, e1' :+: e2'))
-            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :+: e2')
-            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :+: e2')
-            (TVoid, _) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :+: e2')
-            (_, TVoid) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :+: e2')
+            (TInt, TInt) -> MS(s++s1++s2,(TInt, e1' :+: e2'))
+            (TDouble, TInt) -> MS(s++s1++s2,(TDouble, e1' :+: IntDouble e2'))
+            (TInt, TDouble) -> MS(s++s1++s2,(TDouble, IntDouble e1' :+: e2'))
+            (TDouble, TDouble) -> MS(s++s1++s2,(TDouble, e1' :+: e2'))
+            (TString, _) -> erro("Tipo String nao compativel com operacao\n"++s++s1++s2)(TString, e1' :+: e2')
+            (_, TString) -> erro("Tipo String nao compativel com operacao\n"++s++s1++s2)(TString, e1' :+: e2')
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao\n"++s++s1++s2)(TVoid, e1' :+: e2')
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao\n"++s++s1++s2)(TVoid, e1' :+: e2')
             
 
 verExpr tab (MS(s,((e1 :-: e2)))) =
     do
-        let MS(s1,(t1,e1')) = verExpr tab (MS(s,e1))
-            MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
+        let MS(s1,(t1,e1')) = verExpr tab (MS("",e1))
+            MS(s2,(t2,e2')) = verExpr tab (MS("",e2))
         case (t1, t2) of
-            (TInt, TInt) -> MS(s1++s2,(TInt, e1' :-: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :-: IntDouble e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :-: e2'))
-            (TDouble, TDouble) -> MS(s1++s2,(TDouble, e1' :-: e2'))
-            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :-: e2') 
-            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :-: e2')
-            (TVoid, _) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :-: e2')
-            (_, TVoid) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :-: e2')
+            (TInt, TInt) -> MS(s++s1++s2,(TInt, e1' :-: e2'))
+            (TDouble, TInt) -> MS(s++s1++s2,(TDouble, e1' :-: IntDouble e2'))
+            (TInt, TDouble) -> MS(s++s1++s2,(TDouble, IntDouble e1' :-: e2'))
+            (TDouble, TDouble) -> MS(s++s1++s2,(TDouble, e1' :-: e2'))
+            (TString, _) -> erro("Tipo String nao compativel com operacao\n"++s++s1++s2)(TString, e1' :-: e2') 
+            (_, TString) -> erro("Tipo String nao compativel com operacao\n"++s++s1++s2)(TString, e1' :-: e2')
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao\n"++s++s1++s2)(TVoid, e1' :-: e2')
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao\n"++s++s1++s2)(TVoid, e1' :-: e2')
 
 verExpr tab (MS(s,((e1 :*: e2)))) =
     do
-        let MS(s1,(t1,e1')) = verExpr tab (MS(s,e1))
-            MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
+        let MS(s1,(t1,e1')) = verExpr tab (MS("",e1))
+            MS(s2,(t2,e2')) = verExpr tab (MS("",e2))
         case (t1, t2) of
-            (TInt, TInt) -> MS(s1++s2,(TInt, e1' :*: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :*: IntDouble e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :*: e2'))
-            (TDouble, TDouble) -> MS(s1++s2,(TDouble, e1' :*: e2'))
-            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :*: e2') 
-            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :*: e2')
-            (TVoid, _) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :*: e2')
-            (_, TVoid) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :*: e2')
+            (TInt, TInt) -> MS(s++s1++s2,(TInt, e1' :*: e2'))
+            (TDouble, TInt) -> MS(s++s1++s2,(TDouble, e1' :*: IntDouble e2'))
+            (TInt, TDouble) -> MS(s++s1++s2,(TDouble, IntDouble e1' :*: e2'))
+            (TDouble, TDouble) -> MS(s++s1++s2,(TDouble, e1' :*: e2'))
+            (TString, _) -> erro(s++s1++s2++"Tipo String nao compativel com operacao\n")(TString, e1' :*: e2') 
+            (_, TString) -> erro(s++s1++s2++"Tipo String nao compativel com operacao\n")(TString, e1' :*: e2')
+            (TVoid, _) -> erro(s++s1++s2++"Tipo Void nao compativel com operacao\n")(TVoid, e1' :*: e2')
+            (_, TVoid) -> erro(s++s1++s2++"Tipo Void nao compativel com operacao\n")(TVoid, e1' :*: e2')
 
 verExpr tab (MS(s,((e1 :/: e2)))) =
     do
-        let MS(s1,(t1,e1')) = verExpr tab (MS(s,e1))
-            MS(s2,(t2,e2')) = verExpr tab (MS(s,e2))
+        let MS(s1,(t1,e1')) = verExpr tab (MS("",e1))
+            MS(s2,(t2,e2')) = verExpr tab (MS("",e2))
         case (t1, t2) of
-            (TInt, TInt) -> MS(s1++s2,(TInt, e1' :/: e2'))
-            (TDouble, TInt) -> MS(s1++s2,(TDouble, e1' :/: IntDouble e2'))
-            (TInt, TDouble) -> MS(s1++s2,(TDouble, IntDouble e1' :/: e2'))
-            (TDouble, TDouble) -> MS(s1++s2,(TDouble, e1' :/: e2'))
-            (TString, _) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :/: e2') 
-            (_, TString) -> erro(s1++s2++"Tipo String nao compativel com operacao")(TString, e1' :/: e2')
-            (TVoid, _) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :/: e2')
-            (_, TVoid) -> erro(s1++s2++"Tipo Void nao compativel com operacao")(TVoid, e1' :/: e2')
+            (TInt, TInt) -> MS(s++s1++s2,(TInt, e1' :/: e2'))
+            (TDouble, TInt) -> MS(s++s1++s2,(TDouble, e1' :/: IntDouble e2'))
+            (TInt, TDouble) -> MS(s++s1++s2,(TDouble, IntDouble e1' :/: e2'))
+            (TDouble, TDouble) -> MS(s++s1++s2,(TDouble, e1' :/: e2'))
+            (TString, _) -> erro(s++s1++s2++"Tipo String nao compativel com operacao\n")(TString, e1' :/: e2') 
+            (_, TString) -> erro(s++s1++s2++"Tipo String nao compativel com operacao\n")(TString, e1' :/: e2')
+            (TVoid, _) -> erro(s++s1++s2++"Tipo Void nao compativel com operacao\n")(TVoid, e1' :/: e2')
+            (_, TVoid) -> erro(s++s1++s2++"Tipo Void nao compativel com operacao\n")(TVoid, e1' :/: e2')
+
+
+verCmd tab (MS(s, (Atrib id e))) = 
+    do 
+        let MS(s1, (t1,e1)) = verExpr tab (MS("", e))
+            MS(s2, (t2,e2)) = verExpr tab (MS("", IdVar id))
+        if t1 == t2 then (MS(s++s1++s2,(Atrib id e1)))
+        else erro("Atribuicao invalida\n"++s++s1++s2)(Atrib id e1)
