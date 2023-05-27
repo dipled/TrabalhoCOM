@@ -8,7 +8,29 @@ verFunType [] (Chamada fid args) = erro("Funcao nao encontrada\n")(TVoid,(Chamad
 verFunType ((fid' :->: (vars, ft)):fs) (Chamada fid args) =
     if fid' == fid then MS("",(ft,Chamada fid args))
     else verFunType fs (Chamada fid args)
+verArg [] [] = ([],[])
+verArg _ [] = ("Quantidade insuficiente de argumentos",[])
+verArg [] _ = ("Quantidade excessiva de argumentos",[])
+verArg ((id:#:tp):vs) ((MS (s,(t,e))):as) = 
+    do
+        case (tp, t) of
+            (TInt, TDouble) -> ("Atribuicao de Double para Int \n"++s ++ fst (verArg vs as), DoubleInt e: snd (verArg vs as))
+            (TDouble, TInt) -> ("Atribuicao de Int para Double \n"++s ++ fst (verArg vs as),IntDouble e: snd (verArg vs as))
+            (TString,TString) -> (""++s++fst (verArg vs as),e:snd (verArg vs as))
+            (TString, _) -> ("Atribuicao invalida\n"++s++ fst (verArg vs as), e: snd (verArg vs as))
+            (_,TString) -> ("Atribuicao invalida\n"++s++ fst (verArg vs as), e: snd (verArg vs as))
+            (TVoid,_ ) -> ("Atribuicao invalida\n"++s++ fst (verArg vs as), e: snd (verArg vs as))
+            (_,TVoid) -> ("Atribuicao invalida\n"++ s++fst (verArg vs as), e: snd (verArg vs as))
+            (TDouble, TDouble) -> (""++s++ fst (verArg vs as),e:snd (verArg vs as))
+            (TInt,TInt) -> (""++s++ fst (verArg vs as),e:snd (verArg vs as))
 
+verExpr (((fid:->:(idealArgs, ft)):fs), vars) (Chamada id args) =
+    do
+        let argos = map (verExpr (((fid:->:(idealArgs, ft)):fs), vars)) args
+            MS(s,(t,e)) = verFunType ((fid:->:(idealArgs, ft)):fs) (Chamada id args)
+            argosVerified = verArg idealArgs argos
+        MS((fst argosVerified),(t,Chamada id (snd argosVerified)))
+            
 
 verExpr tab (Const(CInt i)) = MS("",(TInt,(Const (CInt i))))
 verExpr tab (Const (CDouble d)) = MS("",(TDouble,(Const (CDouble d))))
