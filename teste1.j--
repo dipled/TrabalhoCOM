@@ -1,16 +1,12 @@
 double maior (double a, double b)
 {
   double m;
-  string v;
-  double x, z;
-  a = maior (x, z);
+  m = maior(1,b);
 }
-double menor(double p, double l)
+int menor(double x)
 {
-  double h;
-  h = maior(p, l);
+  x = maior(menor(x),x);
 }
-
 {
   
 }

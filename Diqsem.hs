@@ -12,6 +12,7 @@ verArg [] [] = ([],[])
 verArg _ [] = ("Quantidade insuficiente de argumentos",[])
 verArg [] _ = ("Quantidade excessiva de argumentos",[])
 verArg ((id:#:tp):vs) ((MS (s,(t,e))):as) = 
+    
     do
         case (tp, t) of
             (TInt, TDouble) -> ("Atribuicao de Double para Int \n"++s ++ fst (verArg vs as), DoubleInt e: snd (verArg vs as))
@@ -24,7 +25,10 @@ verArg ((id:#:tp):vs) ((MS (s,(t,e))):as) =
             (TDouble, TDouble) -> (""++s++ fst (verArg vs as),e:snd (verArg vs as))
             (TInt,TInt) -> (""++s++ fst (verArg vs as),e:snd (verArg vs as))
 
+verExpr ([],[])  (Chamada id args) = erro("Funcao nao encontrada")(TVoid,Chamada id args)
 verExpr (((fid:->:(idealArgs, ft)):fs), vars) (Chamada id args) =
+    if(id /= fid) then verExpr (fs,vars) (Chamada id args)
+    else
     do
         let argos = map (verExpr (((fid:->:(idealArgs, ft)):fs), vars)) args
             MS(s,(t,e)) = verFunType ((fid:->:(idealArgs, ft)):fs) (Chamada id args)
@@ -91,6 +95,7 @@ verExpr tab ((e1 :*: e2)) =
             (_, TString) -> erro("Tipo String nao compativel com operacao\n"++s1++s2)(TString, e1' :*: e2')
             (TVoid, _) -> erro("Tipo Void nao compativel com operacao\n"++s1++s2)(TVoid, e1' :*: e2')
             (_, TVoid) -> erro("Tipo Void nao compativel com operacao\n"++s1++s2)(TVoid, e1' :*: e2')
+
 
 verExpr (fns,[]) (IdVar v) = erro ("Variavel " ++ v ++ " nao encontrada\n") (TVoid,IdVar v)
 verExpr (fns, ((id:#:t):vs)) ((IdVar v))
