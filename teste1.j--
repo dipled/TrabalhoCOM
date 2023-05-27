@@ -1,7 +1,14 @@
 double maior (double a, double b)
 {
   int r;
-  r = maior(soma(a,b),b);
+  read(r);
+  if(a == b)
+  {
+    soma(r,b);
+  }
+  else
+  {
+  }
 }
 int soma (int a, int b)
 {
@@ -9,5 +16,5 @@ int soma (int a, int b)
 }
 
 {
-  
+
 }

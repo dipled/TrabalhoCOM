@@ -194,12 +194,3 @@ prog =
 partida = do r <- prog; eof; return r
 
 parserE = runParser partida [] "Expressoes"
-
-parserExpr s = case parserE s of
-  Left er -> print er
-  Right v -> print v
-
-main =
-  do
-    e <- readFile "teste1.j--"
-    parserExpr e

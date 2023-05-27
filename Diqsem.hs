@@ -31,7 +31,9 @@ verExpr (funs, (fi,vars)) (Chamada id args) =
             (s,t,fid,expectedArgs) = verFunTypeAndGetArgs funs id
             argosVerified = verArg (fid,expectedArgs) argos
         MS((fst argosVerified)++s,(t,Chamada id (snd argosVerified)))
-            
+
+
+       
 
 verExpr tab (Const(CInt i)) = MS("",(TInt,(Const (CInt i))))
 verExpr tab (Const (CDouble d)) = MS("",(TDouble,(Const (CDouble d))))
@@ -107,7 +109,12 @@ verExpr (funs,(fid,vars)) ((Neg e)) =
             (TDouble) -> MS(s1,(t,Neg e))
             _ -> erro("Erro de tipo na tentativa de Negar a expressao na funcao "++fid++". Tipo invalido\n"++s1) (t,Neg e)
 
-
+verCmd (funs, (fi,vars)) (Proc id args) =
+    do
+        let argos = map (verExpr (funs, (fid,vars))) args
+            (s,t,fid,expectedArgs) = verFunTypeAndGetArgs funs id
+            argosVerified = verArg (fid,expectedArgs) argos
+        MS((fst argosVerified)++s,(Proc id (snd argosVerified)))
 verCmd tab (Atrib id e) = 
     do 
         let MS(s1, (t1,e1)) = verExpr tab (IdVar id)
@@ -143,3 +150,164 @@ verCmd (funs,(fid,vars)) (Imp e) =
         let MS(s,(t,er)) = verExpr (funs,(fid,vars)) e
         MS(""++s, (Imp(er)))
 
+verCmd tab (Leitura id) = 
+    do
+        let MS(s1, (t1,e1)) = verExpr tab (IdVar id)
+        (MS(s1,(Leitura id)))
+
+verCmd tab (While el blk) = 
+    do
+        let MS(s,el') = verExprL tab el 
+            MS(s',retBlk) = mapM (verCmd tab) blk
+        (MS(s++s', (While el' retBlk)))
+
+verCmd tab (If el blk blk2) = 
+    do
+        let MS(s,el') = verExprL tab el 
+            MS(s',retBlk) = mapM (verCmd tab) blk
+            MS(s'', retBlk2) = mapM (verCmd tab) blk2
+        (MS(s++s'++s'', (If el' retBlk retBlk2)))
+verExprL (funs,(fid,vars)) (Rel (e1 :==: e2)) =
+    do
+        let MS(s1, (t1,e1')) = verExpr (funs,(fid,vars)) e1
+            MS(s2, (t2,e2')) = verExpr (funs,(fid,vars)) e2
+        case (t1,t2) of
+            (TInt, TInt) -> MS(s1++s2,(Rel (e1' :==: e2')))
+            (TDouble, TInt) -> MS(s1++s2,(Rel (e1' :==: IntDouble e2')))
+            (TInt, TDouble) -> MS(s1++s2,(Rel (IntDouble e1' :==: e2')))
+            (TDouble, TDouble) -> MS(s1++s2,(Rel (e1' :==: e2')))
+            (TString,TString) -> MS(s1++s2,(Rel (e1' :==: e2')))
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :==: e2'))
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :==: e2'))
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :==: e2'))
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :==: e2'))       
+
+verExprL (funs,(fid,vars)) (Rel (e1 :>: e2)) =
+    do
+        let MS(s1, (t1,e1')) = verExpr (funs,(fid,vars)) e1
+            MS(s2, (t2,e2')) = verExpr (funs,(fid,vars)) e2
+        case (t1,t2) of
+            (TInt, TInt) -> MS(s1++s2,(Rel (e1' :>: e2')))
+            (TDouble, TInt) -> MS(s1++s2,(Rel (e1' :>: IntDouble e2')))
+            (TInt, TDouble) -> MS(s1++s2,(Rel (IntDouble e1' :>: e2')))
+            (TDouble, TDouble) -> MS(s1++s2,(Rel (e1' :>: e2')))
+            (TString,TString) -> MS(s1++s2,(Rel (e1' :>: e2')))
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>: e2'))
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>: e2'))
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>: e2'))
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>: e2'))
+
+verExprL (funs,(fid,vars)) (Rel (e1 :<: e2)) =
+    do
+        let MS(s1, (t1,e1')) = verExpr (funs,(fid,vars)) e1
+            MS(s2, (t2,e2')) = verExpr (funs,(fid,vars)) e2
+        case (t1,t2) of
+            (TInt, TInt) -> MS(s1++s2,(Rel (e1' :<: e2')))
+            (TDouble, TInt) -> MS(s1++s2,(Rel (e1' :<: IntDouble e2')))
+            (TInt, TDouble) -> MS(s1++s2,(Rel (IntDouble e1' :<: e2')))
+            (TDouble, TDouble) -> MS(s1++s2,(Rel (e1' :<: e2')))
+            (TString,TString) -> MS(s1++s2,(Rel (e1' :<: e2')))
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<: e2'))
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<: e2'))
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<: e2'))
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<: e2'))            
+
+verExprL (funs,(fid,vars)) (Rel (e1 :<=: e2)) =
+    do
+        let MS(s1, (t1,e1')) = verExpr (funs,(fid,vars)) e1
+            MS(s2, (t2,e2')) = verExpr (funs,(fid,vars)) e2
+        case (t1,t2) of
+            (TInt, TInt) -> MS(s1++s2,(Rel (e1' :<=: e2')))
+            (TDouble, TInt) -> MS(s1++s2,(Rel (e1' :<=: IntDouble e2')))
+            (TInt, TDouble) -> MS(s1++s2,(Rel (IntDouble e1' :<=: e2')))
+            (TDouble, TDouble) -> MS(s1++s2,(Rel (e1' :<=: e2')))
+            (TString,TString) -> MS(s1++s2,(Rel (e1' :<=: e2')))
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<=: e2'))
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<=: e2'))
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<=: e2'))
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :<=: e2'))            
+
+verExprL (funs,(fid,vars)) (Rel (e1 :>=: e2)) =
+    do
+        let MS(s1, (t1,e1')) = verExpr (funs,(fid,vars)) e1
+            MS(s2, (t2,e2')) = verExpr (funs,(fid,vars)) e2
+        case (t1,t2) of
+            (TInt, TInt) -> MS(s1++s2,(Rel (e1' :>=: e2')))
+            (TDouble, TInt) -> MS(s1++s2,(Rel (e1' :>=: IntDouble e2')))
+            (TInt, TDouble) -> MS(s1++s2,(Rel (IntDouble e1' :>=: e2')))
+            (TDouble, TDouble) -> MS(s1++s2,(Rel (e1' :>=: e2')))
+            (TString,TString) -> MS(s1++s2,(Rel (e1' :>=: e2')))
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>=: e2'))
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>=: e2'))
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>=: e2'))
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :>=: e2'))            
+
+verExprL (funs,(fid,vars)) (Rel (e1 :/=: e2)) =
+    do
+        let MS(s1, (t1,e1')) = verExpr (funs,(fid,vars)) e1
+            MS(s2, (t2,e2')) = verExpr (funs,(fid,vars)) e2
+        case (t1,t2) of
+            (TInt, TInt) -> MS(s1++s2,(Rel (e1' :/=: e2')))
+            (TDouble, TInt) -> MS(s1++s2,(Rel (e1' :/=: IntDouble e2')))
+            (TInt, TDouble) -> MS(s1++s2,(Rel (IntDouble e1' :/=: e2')))
+            (TDouble, TDouble) -> MS(s1++s2,(Rel (e1' :/=: e2')))
+            (TString,TString) -> MS(s1++s2,(Rel (e1' :/=: e2')))
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :/=: e2'))
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :/=: e2'))
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :/=: e2'))
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(Rel (e1' :/=: e2'))            
+
+verExprL (funs,(fid,vars)) (e1 :&: e2) =
+    do
+        let MS(s1, e1') = verExprL (funs,(fid,vars)) e1
+            MS(s2, e2') = verExprL (funs,(fid,vars)) e2
+        MS(s1++s2,((e1' :&: e2')))
+        
+verExprL (funs,(fid,vars)) (e1 :|: e2) =
+    do
+        let MS(s1, e1') = verExprL (funs,(fid,vars)) e1
+            MS(s2, e2') = verExprL (funs,(fid,vars)) e2
+        MS(s1++s2,((e1' :|: e2')))
+
+verExprL (funs,(fid,vars)) (Not e1) =
+    do
+        let MS(s1, e1') = verExprL (funs,(fid,vars)) e1
+        MS(s1,((Not e1')))
+
+
+verBlk fns (fi, vrs, blk) = 
+    do
+        let s' = verDuplicateVars fi vrs (tail vrs)
+            MS(s,cmds) = mapM (verCmd (fns,(fi,vrs))) blk
+        MS(s'++s,(fi,vrs,cmds))
+
+verDuplicateVar fid id [] = ""
+verDuplicateVar fid id ((id':#:t'):vs') = 
+    if id == id' then "Erro: variavel "++id++" duplicada na funcao "++fid++"\n" ++ verDuplicateVar fid id vs'
+    else verDuplicateVar fid id vs'
+verDuplicateVars fid [] _ = ""
+verDuplicateVars fid ((id:#:t):vs) vs' = (verDuplicateVar fid id vs')++(verDuplicateVars fid vs (tail vs'))
+
+verDuplicateFun fid [] = ""
+verDuplicateFun fid ((id:->:r):fs) = 
+    if fid == id then "Erro: Funcao "++fid++" duplicada\n"
+    else verDuplicateFun fid fs
+
+verDuplicateFuns [] _ = ""
+verDuplicateFuns ((fid:->:s):fz) fs = (verDuplicateFun fid fs)++(verDuplicateFuns fz (tail fs))
+verFuns fns ls = mapM (verBlk fns) ls
+
+verProg (Prog fns ls mainVar mainBlk) = 
+    do
+        let s1 = (verDuplicateFuns fns (tail fns))
+        let MS(s,fx) = verFuns fns ls
+            MS(s', (fi,vrs,cmds)) = verBlk fns ("main",mainVar,mainBlk)
+        MS(s1++s++s',Prog fns fx mainVar cmds)
+
+main =
+  do
+    e <- readFile "teste1.j--"
+    let syntaxTree = parserE e
+    case syntaxTree of 
+        Left v -> print v
+        Right x -> print(verProg x)
