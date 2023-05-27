@@ -2,23 +2,15 @@ double maior (double a, double b)
 {
   double m;
   string v;
-  a = m + 2;
-  a = v + a;
-  a = -(-m);
-  if (a > b) {m = a;}
-  else {m = b;}
-  return b;
+  double x, z;
+  a = maior (x, z);
+}
+double menor(double p, double l)
+{
+  double h;
+  h = maior(p, l);
 }
 
 {
-  int x, num;
-  double a;
-  int x;
   
-  print("Numero:");
-  read (num);
-  x = fat (4);
-  a = maior (2.5, 10);
-  imprimir("teste:", 2);
-  return 0;
 }

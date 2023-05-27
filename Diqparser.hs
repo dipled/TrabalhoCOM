@@ -178,7 +178,7 @@ funBlock =
     blk <- braces completeBlock
     let localVars = fst blk
         cmds = snd blk
-    return (id :->: (as ++ localVars, t), (id, as ++ localVars, cmds))
+    return (id :->: (as, t), (id, as ++ localVars, cmds))
 
 prog =
   do
