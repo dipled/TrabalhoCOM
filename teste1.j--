@@ -17,10 +17,21 @@ int quadrado (int l)
 {
   return (-l)*(-l);
 }
+double maior (double x, double y)
+{
+  if(x >= y)
+  {
+    return x;
+  }
+  else
+  {
+    return y;
+  }
+}
 {
   int num;
   double x;
-  x = num;
-  read(v);
-  print(fatorial(quadrado(num)));
+  read(x);
+  read (num);
+  print(fatorial(quadrado(quadrado(y))));
 }

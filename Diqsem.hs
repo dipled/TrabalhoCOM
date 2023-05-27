@@ -27,7 +27,7 @@ verArg (fid,(id:#:tp):vs) ((MS (s,(t,e))):as) =
 
 verExpr (funs, (fi,vars)) (Chamada id args) =
     do
-        let argos = map (verExpr (funs, (fid,vars))) args
+        let argos = map (verExpr (funs, (fi,vars))) args
             (s,t,fid,expectedArgs) = verFunTypeAndGetArgs funs id
             argosVerified = verArg (fid,expectedArgs) argos
         MS((fst argosVerified)++s,(t,Chamada id (snd argosVerified)))
@@ -111,7 +111,7 @@ verExpr (funs,(fid,vars)) ((Neg e)) =
 
 verCmd (funs, (fi,vars)) (Proc id args) =
     do
-        let argos = map (verExpr (funs, (fid,vars))) args
+        let argos = map (verExpr (funs, (fi,vars))) args
             (s,t,fid,expectedArgs) = verFunTypeAndGetArgs funs id
             argosVerified = verArg (fid,expectedArgs) argos
         MS((fst argosVerified)++s,(Proc id (snd argosVerified)))
