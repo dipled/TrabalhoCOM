@@ -1,20 +1,26 @@
-double maior (double a, double b)
+double fatorial (double x)
 {
-  int r;
-  read(r);
-  if(a == b)
+  if(x < 0)
   {
-    soma(r,b);
+    print("Erro, valor invalido!");
+  }
+  if(x == 0)
+  {
+    return 1;
   }
   else
   {
+    return x * fatorial(x-1);
   }
 }
-int soma (int a, int b)
+int quadrado (int l)
 {
-  return a + b;
+  return (-l)*(-l);
 }
-
 {
-
+  int num;
+  double x;
+  x = num;
+  read(v);
+  print(fatorial(quadrado(num)));
 }

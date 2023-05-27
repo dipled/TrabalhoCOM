@@ -95,7 +95,7 @@ verExpr (funs,(fid,vars)) ((e1 :*: e2)) =
             (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(TVoid, e1' :*: e2')
             (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n"++s1++s2)(TVoid, e1' :*: e2')
 
-verExpr (fns,(fid,[])) (IdVar v) = erro ("Variavel " ++ v ++ " nao encontrada\n") (TVoid,IdVar v)
+verExpr (fns,(fid,[])) (IdVar v) = erro ("Variavel " ++ v ++ " nao encontrada na funcao "++fid++"\n") (TVoid,IdVar v)
 verExpr (fns, (fid,(id:#:t):vs)) ((IdVar v))
     |v == id = MS("",(t, (IdVar v)))
     |otherwise = verExpr (fns,(fid,vs)) (IdVar v)
@@ -131,20 +131,24 @@ verCmd tab (Atrib id e) =
             (TInt,TInt) -> (MS(s1++s2,(Atrib id e2)))
 verCmd (funs,(fid,vars)) (Ret e) = 
     case e of
-        Nothing -> MS("",Ret Nothing)
+        Nothing -> do
+                    let (s,t,fi,expectedArgs) = verFunTypeAndGetArgs funs fid
+                    if t == TVoid then MS("",Ret Nothing)
+                    else
+                        erro("Tipo Void incompativel com retorno da funcao "++fid++"\n")(Ret Nothing)
         Just ex -> do    
-                        let (s,t,fi,expectedArgs) = verFunTypeAndGetArgs funs fid
-                            MS(se,(et,exp)) = verExpr (funs,(fid,vars)) ex
-                        case (t, et) of 
-                                (TInt, TInt) -> MS(s ++ se, Ret (Just exp))
-                                (TDouble, TDouble) -> MS(s ++ se, Ret (Just exp))
-                                (TString, TString) -> MS(s ++ se, Ret (Just exp))
-                                (TVoid, _) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
-                                (_,TVoid) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
-                                (_, TString) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
-                                (TString,_) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
-                                (TInt, TDouble) -> adv("Tipo Double no retorno esperado Int de funcao "++fid++"\n"++s++se)(Ret (Just (DoubleInt exp)))
-                                (TDouble, TInt) -> adv("Tipo Int no retorno esperado Double de funcao "++fid++"\n"++s++se)(Ret (Just (IntDouble exp)))
+                    let (s,t,fi,expectedArgs) = verFunTypeAndGetArgs funs fid
+                        MS(se,(et,exp)) = verExpr (funs,(fid,vars)) ex
+                    case (t, et) of 
+                            (TInt, TInt) -> MS(s ++ se, Ret (Just exp))
+                            (TDouble, TDouble) -> MS(s ++ se, Ret (Just exp))
+                            (TString, TString) -> MS(s ++ se, Ret (Just exp))
+                            (TVoid, _) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
+                            (_,TVoid) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
+                            (_, TString) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
+                            (TString,_) -> erro("Tipo incompativel com retorno de funcao "++fid++"\n"++s++se)(Ret (Just exp))
+                            (TInt, TDouble) -> adv("Tipo Double no retorno esperado Int de funcao "++fid++"\n"++s++se)(Ret (Just (DoubleInt exp)))
+                            (TDouble, TInt) -> adv("Tipo Int no retorno esperado Double de funcao "++fid++"\n"++s++se)(Ret (Just (IntDouble exp)))
 verCmd (funs,(fid,vars)) (Imp e) = 
     do 
         let MS(s,(t,er)) = verExpr (funs,(fid,vars)) e
@@ -310,4 +314,7 @@ main =
     let syntaxTree = parserE e
     case syntaxTree of 
         Left v -> print v
-        Right x -> print(verProg x)
+        Right x -> do 
+                    let MS(s,p) = verProg x
+                    putStrLn s 
+                    print(p)
