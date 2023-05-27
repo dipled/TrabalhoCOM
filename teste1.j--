@@ -1,14 +1,11 @@
 double maior (double a, double b)
 {
-  double m;
-  string v;
-  double x, z;
-  a = maior (x, z);
+  int r;
+  r = maior(soma(a,b),b);
 }
-double menor(double p, double l)
+int soma (int a, int b)
 {
-  double h;
-  h = maior(p, l);
+  return a + b;
 }
 
 {
