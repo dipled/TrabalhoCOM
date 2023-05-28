@@ -13,13 +13,16 @@ double fatorial (double x)
     return x * fatorial(x-1);
   }
 }
+int quadrado(int x)
+{
+  return;
+}
 int quadrado (int l)
 {
   return (-l)*(-l);
 }
 double maior (double x, double y)
 {
-  int x;
   if(x >= y)
   {
     return x;
@@ -32,7 +35,7 @@ double maior (double x, double y)
 {
   int num;
   double x;
-  read(v);
+  read(x);
   read (num);
-  print(fatorial(quadrado(quadrado(x))));
+  print(fatorial(quadrado(quadrado(y))));
 }
