@@ -317,6 +317,4 @@ main =
     case syntaxTree of 
         Left v -> print v
         Right x -> do 
-                    let MS(s,p) = verProg x
-                    putStrLn s 
-                    print(p)
+                    printMS(verProg x)
