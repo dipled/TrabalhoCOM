@@ -270,9 +270,7 @@ verExprL (funs,(fid,vars)) (e1 :&: e2) =
 
 verExprL (funs,(fid,vars)) (e1 :|: e2) =
     do
-        e1' <- verExprL (funs,(fid,vars)) e1
-        e2' <- verExprL (funs,(fid,vars)) e2
-        pure (e1' :|: e2')        
+        verExprL (funs,(fid,vars)) e1 >>= \e1' -> verExprL (funs,(fid,vars)) e2 >>= \e2' -> pure (e1' :|: e2')  
 
 verExprL (funs,(fid,vars)) (Not e1) =
     do
