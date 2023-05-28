@@ -13,6 +13,10 @@ double fatorial (double x)
     return x * fatorial(x-1);
   }
 }
+int quadrado(int x)
+{
+  return;
+}
 int quadrado (int l)
 {
   return (-l)*(-l);
