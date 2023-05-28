@@ -116,21 +116,22 @@ verCmd (funs, (fi,vars)) (Proc id args) =
         argosVerified <- verArg (fid,expectedArgs) argos
         pure(Proc id argosVerified)
 
-verCmd tab (Atrib id e) = 
+verCmd (funs,(fid,vars)) (Atrib id e) = 
     do 
-        (t1,e1) <- verExpr tab (IdVar id)
-        (t2,e2) <- verExpr tab e
+        (t1,e1) <- verExpr (funs,(fid,vars)) (IdVar id)
+        (t2,e2) <- verExpr (funs,(fid,vars)) e
         case (t1,t2) of 
-            (TInt, TDouble) -> adv("Atribuicao de Double para Int na variavel "++id++"\n")(Atrib id (DoubleInt e2))
-            (TDouble, TInt) -> adv("Atribuicao de Int para Double na variavel "++id++"\n")(Atrib id (IntDouble e2))
+            (TInt, TDouble) -> adv("Atribuicao de Double para Int na variavel "++id++" na funcao " ++ fid ++ "\n")(Atrib id (DoubleInt e2))
+            (TDouble, TInt) -> adv("Atribuicao de Int para Double na variavel "++id++" na funcao " ++ fid ++ "\n")(Atrib id (IntDouble e2))
             (TString,TString) -> pure (Atrib id e2)
-            (TString, _) -> erro("Atribuicao invalida na variavel "++id++"\n")(Atrib id e2)
-            (_,TString) -> erro("Atribuicao invalida na variavel "++id++"\n")(Atrib id e2)
-            (TVoid,_ ) -> erro("Atribuicao invalida na variavel "++id++"\n")(Atrib id e2)
-            (_,TVoid) -> erro("Atribuicao invalida na variavel "++id++"\n")(Atrib id e2)
+            (TString, _) -> erro("Atribuicao invalida na variavel "++id++" na funcao " ++ fid ++ "\n")(Atrib id e2)
+            (_,TString) -> erro("Atribuicao invalida na variavel "++id++" na funcao " ++ fid ++ "\n")(Atrib id e2)
+            (TVoid,_ ) -> erro("Atribuicao invalida na variavel "++id++" na funcao " ++ fid ++ "\n")(Atrib id e2)
+            (_,TVoid) -> erro("Atribuicao invalida na variavel "++id++" na funcao " ++ fid ++ "\n")(Atrib id e2)
             (TDouble, TDouble) -> pure (Atrib id e2)
             (TInt,TInt) -> pure (Atrib id e2)
 verCmd (funs,(fid,vars)) (Ret e) = 
+    
     case e of
         Nothing -> do
                     (t,(fid,expectedArgs)) <- verFunTypeAndGetArgs funs fid
@@ -269,9 +270,7 @@ verExprL (funs,(fid,vars)) (e1 :&: e2) =
 
 verExprL (funs,(fid,vars)) (e1 :|: e2) =
     do
-        e1' <- verExprL (funs,(fid,vars)) e1
-        e2' <- verExprL (funs,(fid,vars)) e2
-        pure (e1' :|: e2')        
+        verExprL (funs,(fid,vars)) e1 >>= \e1' -> verExprL (funs,(fid,vars)) e2 >>= \e2' -> pure (e1' :|: e2')  
 
 verExprL (funs,(fid,vars)) (Not e1) =
     do
@@ -316,6 +315,4 @@ main =
     case syntaxTree of 
         Left v -> print v
         Right x -> do 
-                    let MS(s,p) = verProg x
-                    putStrLn s 
-                    print(p)
+                    printMS(verProg x)
