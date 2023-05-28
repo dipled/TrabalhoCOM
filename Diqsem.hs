@@ -131,6 +131,7 @@ verCmd tab (Atrib id e) =
             (TDouble, TDouble) -> pure (Atrib id e2)
             (TInt,TInt) -> pure (Atrib id e2)
 verCmd (funs,(fid,vars)) (Ret e) = 
+    
     case e of
         Nothing -> do
                     (t,(fid,expectedArgs)) <- verFunTypeAndGetArgs funs fid
