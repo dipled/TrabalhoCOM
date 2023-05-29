@@ -11,6 +11,7 @@ instance Applicative ErrorM where
 
 instance Monad ErrorM where
     MS(s,a) >>= f = let MS (s',b) = f a in MS (s++s',b)
+
 erro s a= MS ("Erro:"++s,a)
 adv s a = MS("Adv:"++s,a)
 printMS (MS(s,a)) = putStrLn s >> print a
