@@ -9,6 +9,7 @@ verFunTypeAndGetArgs [] fid = erro("Funcao nao encontrada "++fid++"\n")(TVoid, (
 verFunTypeAndGetArgs ((fid' :->: (vars, ft)):fs) fid  =
     if fid' == fid then pure ((ft,(fid,vars)))
     else verFunTypeAndGetArgs fs fid
+
 verExprLOp (funs,(fid,vars)) o e1 e2 =
     do
         (t1,e1') <- verExpr (funs,(fid,vars)) e1
@@ -62,12 +63,8 @@ verExpr (funs, (fi,vars)) (Chamada id args) =
         argosVerified <- verArg (fid,expectedArgs) argos
         pure(t,Chamada id argosVerified)
 
-
-       
-
 verExpr tab (Const(CInt i)) = pure(TInt,(Const (CInt i)))
 verExpr tab (Const (CDouble d)) = pure(TDouble,(Const (CDouble d)))
-
 verExpr tab ((Lit v)) = pure (TString,(Lit v))
 
 verExpr tab (e1 :+: e2) = verExprOp tab (:+:) e1 e2

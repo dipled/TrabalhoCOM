@@ -1,41 +1,42 @@
 double fatorial (double x)
 {
-  if(x < 0)
-  {
-    print("Erro, valor invalido!");
-  }
-  if(x == 0)
-  {
-    return 1;
-  }
-  else
-  {
-    return x * fatorial(x-1);
-  }
-}
-int quadrado(int x)
-{
-  return;
+	if(x < 0)
+	{
+		print("Erro, valor invalido!");
+	}
+	if(x == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		return x * fatorial(x-1);
+	}
 }
 int quadrado (int l)
 {
-  return (-l)*(-l);
+	return (-l)*(-l);
 }
 double maior (double x, double y)
 {
-  if(x >= y)
-  {
-    return x;
-  }
-  else
-  {
-    return y;
-  }
+	if(x >= y)
+	{
+		return x;
+	}
+	else
+	{
+		return y;
+	}
 }
 {
-  int num;
-  double x;
-  read(x);
-  read (num);
-  print(fatorial(quadrado(quadrado(y))));
+	int num;
+	double x;
+	string s;
+	double y;
+	fibonacci(3);
+	print(v + f);
+	read(x);
+	read (num);
+	print(fatorial(quadrado(quadrado(2.5))));
+	quadrado(maior(y, s));
 }

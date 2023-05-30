@@ -7,7 +7,7 @@ instance Functor ErrorM where
 
 instance Applicative ErrorM where
     pure x = MS ("",x)
-    MS(s1,f) <*> MS (s2,x) = MS(s1<>s2,f x)
+    MS(s1,f) <*> MS (s2,x) = MS(s1<>s2,f x) -- <> is a Semigroup operator. In the case of Strings, <> acts as ++ 
 
 instance Monad ErrorM where
     MS(s,a) >>= f = let MS (s',b) = f a in MS (s++s',b)
