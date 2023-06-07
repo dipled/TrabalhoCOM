@@ -33,10 +33,13 @@ double maior (double x, double y)
 	double x;
 	string s;
 	double y;
-	fibonacci(3);
+	if(!(s == "teste"))
+	{
+		return;
+	}
+	else{
+		print(s);
+	}
 	print(v + f);
-	read(x);
-	read (num);
 	print(fatorial(quadrado(quadrado(2.5))));
-	quadrado(maior(y, s));
 }

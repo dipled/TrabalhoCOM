@@ -4,7 +4,7 @@ import Diqtypes
 import Diqxpressions
 import Diqmonad
 
-
+verFunTypeAndGetArgs _ "main" = pure (TVoid,("main",[]))
 verFunTypeAndGetArgs [] fid = erro("Funcao nao encontrada "++fid++"\n")(TVoid, (fid,[]))
 verFunTypeAndGetArgs ((fid' :->: (vars, ft)):fs) fid  =
     if fid' == fid then pure ((ft,(fid,vars)))
