@@ -199,12 +199,11 @@ verDuplicateFun fid ((id:->:r):fs) =
 
 verDuplicateFuns [] _ = pure()
 verDuplicateFuns ((fid:->:s):fz) fs = (verDuplicateFun fid fs) >> (verDuplicateFuns fz (tail fs))
-verFuns fns ls = mapM (verBlk fns) ls
 
 verProg (Prog fns ls mainVar mainBlk) = 
     do
         verDuplicateFuns fns (tail fns)
-        fx <- verFuns fns ls
+        fx <- mapM (verBlk fns) ls
         (fi,vrs,cmds) <- verBlk fns ("main",mainVar,mainBlk)
         pure (Prog fns fx mainVar cmds)
 
