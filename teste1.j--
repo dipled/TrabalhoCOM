@@ -12,34 +12,44 @@ double fatorial (double x)
 	{
 		return x * fatorial(x-1);
 	}
+
 }
-int quadrado (int l)
+int maior(int a, int b)
 {
-	return (-l)*(-l);
-}
-double maior (double x, double y)
-{
-	if(x >= y)
+	if(a > b)
 	{
-		return x;
+		return a;
 	}
 	else
 	{
-		return y;
+		return b;		
 	}
+	return;
 }
 {
-	int num;
-	double x;
-	string s;
-	double y;
-	if(!(s == "teste"))
+	int n1;
+	int n2;
+	string nome;
+	double resultado;
+	read(n1);
+	read(n2);
+	read(nome);
+	if(nome == "pedro")
 	{
-		return 10;
+		print("oi\n");
+		print(nome);
 	}
-	else{
-		print(s);
+	else
+	{
+		resultado = 	fatorial(maior(n1,n2));
+		print(resultado);
+		resultado = 0;
+		fatorial(resultado);
+		maior(resultado, nome);
+		if(nome == resultado)
+		{
+			v = 2;
+		}
 	}
-	print(v + f);
-	print(fatorial(quadrado(quadrado(2.5))));
+
 }
