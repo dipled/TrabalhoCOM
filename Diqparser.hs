@@ -23,7 +23,7 @@ lingDef =
       T.identStart = letter <|> char '_',
       T.identLetter = alphaNum <|> char '_',
       T.reservedNames =
-        ["int", "double", "string", "void", "read", "print", "return", "if", "else", "while"]
+        ["int", "double", "string", "void", "read", "print", "return", "if", "else", "while", "for", "do"]
     }
 
 lexico = T.makeTokenParser lingDef
@@ -136,7 +136,28 @@ elseBlock =
     <|> do return []
 
 ifBlock = do reserved "if"; e <- parens exprL; blk <- braces cmdBlock; ret <- elseBlock; return (If e blk ret)
-
+forStmt =
+  do
+    a <- atrib
+    semi
+    eL <- exprL
+    semi
+    a2 <- atrib
+    return (a, (eL, a2))
+forBlock = 
+  do
+    reserved "for"
+    stmt <- parens forStmt
+    blk <- braces cmdBlock
+    return (For (fst stmt) (fst (snd stmt)) (snd (snd stmt)) blk)
+doWhileBlock = 
+  do
+    reserved "do"
+    blk <- braces cmdBlock
+    reserved "while"
+    e <- parens exprL
+    semi
+    return (DoWhile blk e)
 whileBlock =
   do
     reserved "while"
@@ -152,6 +173,8 @@ cmd =
     <|> (do ifBlock >>= \r -> return r)
     <|> (do whileBlock >>= \r -> return r)
     <|> (do id <- identifier; exs <- parens (listExpr); semi; return (Proc id exs))
+    <|> (do forBlock >>= \r -> return r)
+    <|> (do doWhileBlock >>= \r -> return r)
 
 parseIds = sepBy1 identifier comma
 

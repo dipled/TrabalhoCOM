@@ -33,6 +33,17 @@ double maior (double x, double y)
 	double x;
 	string s;
 	double y;
+	int i;
+	for(i = 0; i < 3; i = i + 1)
+	{
+		print("teste");
+	}
+	do
+	{
+		read(y);
+	}
+	while(3 > 5);
+
 	fibonacci(3);
 	print(v + f);
 	read(x);

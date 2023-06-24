@@ -152,6 +152,19 @@ verCmd tab (If el blk blk2) =
         retBlk <- mapM (verCmd tab) blk
         retBlk2 <- mapM (verCmd tab) blk2
         pure (If el' retBlk retBlk2)
+verCmd tab (DoWhile blk el) = 
+    do
+        el' <- verExprL tab el
+        retBlk <- mapM (verCmd tab) blk
+        pure ((DoWhile retBlk el'))
+
+verCmd tab (For a1 el a2 blk) = 
+    do
+        a1' <- verCmd tab a1
+        a2' <- verCmd tab a2
+        el' <- verExprL tab el
+        retBlk <- mapM (verCmd tab) blk
+        pure ((For a1' el' a2' retBlk))
 
 verExprL tab (Rel (e1 :==: e2)) = verExprLOp tab (:==:) e1 e2
 verExprL tab (Rel (e1 :/=: e2)) = verExprLOp tab (:/=:) e1 e2
