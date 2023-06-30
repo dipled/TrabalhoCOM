@@ -4,11 +4,40 @@ import Diqtypes
 import Diqxpressions
 import Diqmonad
 
-
+verFunTypeAndGetArgs _ "main" = pure (TVoid,("main",[]))
 verFunTypeAndGetArgs [] fid = erro("Funcao nao encontrada "++fid++"\n")(TVoid, (fid,[]))
 verFunTypeAndGetArgs ((fid' :->: (vars, ft)):fs) fid  =
     if fid' == fid then pure ((ft,(fid,vars)))
     else verFunTypeAndGetArgs fs fid
+
+verExprLOp (funs,(fid,vars)) o e1 e2 =
+    do
+        (t1,e1') <- verExpr (funs,(fid,vars)) e1
+        (t2,e2') <- verExpr (funs,(fid,vars)) e2
+        case (t1,t2) of
+            (TInt, TInt) -> pure(Rel (o e1' e2'))
+            (TDouble, TInt) -> pure (Rel (o e1' (IntDouble e2')))
+            (TInt, TDouble) -> pure (Rel (o (IntDouble e1') e2'))
+            (TDouble, TDouble) -> pure  (Rel (o e1' e2'))
+            (TString,TString) -> pure (Rel (o e1' e2'))
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (o e1' e2'))
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (o e1' e2'))
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (o e1' e2'))
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (o e1' e2'))
+
+verExprOp (funs,(fid,vars))  o e1 e2 = 
+    do
+        (t1, e1') <- verExpr (funs,(fid,vars)) e1
+        (t2,e2') <- verExpr (funs,(fid,vars)) e2
+        case (t1, t2) of
+            (TInt, TInt) -> pure (TInt, o e1' e2')
+            (TDouble, TInt) -> pure (TDouble, o e1' (IntDouble e2'))
+            (TInt, TDouble) -> pure (TDouble, o (IntDouble e1') e2')
+            (TDouble, TDouble) -> pure (TDouble, o e1' e2')
+            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString,  o e1' e2')
+            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, o e1' e2')
+            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, o e1' e2')
+            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, o e1' e2')
 
         
 verArg (fid,[]) [] = pure []
@@ -34,67 +63,15 @@ verExpr (funs, (fi,vars)) (Chamada id args) =
         argosVerified <- verArg (fid,expectedArgs) argos
         pure(t,Chamada id argosVerified)
 
-
-       
-
 verExpr tab (Const(CInt i)) = pure(TInt,(Const (CInt i)))
 verExpr tab (Const (CDouble d)) = pure(TDouble,(Const (CDouble d)))
-
 verExpr tab ((Lit v)) = pure (TString,(Lit v))
 
-verExpr (funs,(fid,vars)) ((e1 :+: e2)) =
-    do
-        (t1, e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1, t2) of
-            (TInt, TInt) -> pure (TInt, e1' :+: e2')
-            (TDouble, TInt) -> pure (TDouble, e1' :+: IntDouble e2')
-            (TInt, TDouble) -> pure (TDouble, IntDouble e1' :+: e2')
-            (TDouble, TDouble) -> pure (TDouble, e1' :+: e2')
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :+: e2')
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :+: e2')
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :+: e2')
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :+: e2')
+verExpr tab (e1 :+: e2) = verExprOp tab (:+:) e1 e2
+verExpr tab (e1 :-: e2) = verExprOp tab (:-:) e1 e2
+verExpr tab (e1 :*: e2) = verExprOp tab (:*:) e1 e2
+verExpr tab (e1 :/: e2) = verExprOp tab (:/:) e1 e2
 
-verExpr (funs,(fid,vars)) ((e1 :-: e2)) =
-    do
-        (t1, e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1, t2) of
-            (TInt, TInt) -> pure (TInt, e1' :-: e2')
-            (TDouble, TInt) -> pure (TDouble, e1' :-: IntDouble e2')
-            (TInt, TDouble) -> pure (TDouble, IntDouble e1' :-: e2')
-            (TDouble, TDouble) -> pure (TDouble, e1' :-: e2')
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :-: e2')
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :-: e2')
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :-: e2')
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :-: e2')
-verExpr (funs,(fid,vars)) ((e1 :*: e2)) =
-    do
-        (t1, e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1, t2) of
-            (TInt, TInt) -> pure (TInt, e1' :*: e2')
-            (TDouble, TInt) -> pure (TDouble, e1' :*: IntDouble e2')
-            (TInt, TDouble) -> pure (TDouble, IntDouble e1' :*: e2')
-            (TDouble, TDouble) -> pure (TDouble, e1' :*: e2')
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :*: e2')
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :*: e2')
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :*: e2')
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :*: e2')
-verExpr (funs,(fid,vars)) ((e1 :/: e2)) =
-    do
-        (t1, e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1, t2) of
-            (TInt, TInt) -> pure (TInt, e1' :/: e2')
-            (TDouble, TInt) -> pure (TDouble, e1' :/: IntDouble e2')
-            (TInt, TDouble) -> pure (TDouble, IntDouble e1' :/: e2')
-            (TDouble, TDouble) -> pure (TDouble, e1' :/: e2')
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :/: e2')
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(TString, e1' :/: e2')
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :/: e2')
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(TVoid, e1' :/: e2')
 verExpr (fns,(fid,[])) (IdVar v) = erro ("Variavel " ++ v ++ " nao encontrada na funcao "++fid++"\n") (TVoid,IdVar v)
 verExpr (fns, (fid,(id:#:t):vs)) ((IdVar v))
     |v == id = pure (t, (IdVar v))
@@ -175,92 +152,26 @@ verCmd tab (If el blk blk2) =
         retBlk <- mapM (verCmd tab) blk
         retBlk2 <- mapM (verCmd tab) blk2
         pure (If el' retBlk retBlk2)
-verExprL (funs,(fid,vars)) (Rel (e1 :==: e2)) =
+verCmd tab (DoWhile blk el) = 
     do
-        (t1,e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1,t2) of
-            (TInt, TInt) -> pure(Rel (e1' :==: e2'))
-            (TDouble, TInt) -> pure (Rel (e1' :==: IntDouble e2'))
-            (TInt, TDouble) -> pure (Rel (IntDouble e1' :==: e2'))
-            (TDouble, TDouble) -> pure  (Rel (e1' :==: e2'))
-            (TString,TString) -> pure (Rel (e1' :==: e2'))
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :==: e2'))
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :==: e2'))
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :==: e2'))
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :==: e2'))
-verExprL (funs,(fid,vars)) (Rel (e1 :>=: e2)) =
-    do
-        (t1,e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1,t2) of
-            (TInt, TInt) -> pure(Rel (e1' :>=: e2'))
-            (TDouble, TInt) -> pure (Rel (e1' :>=: IntDouble e2'))
-            (TInt, TDouble) -> pure (Rel (IntDouble e1' :>=: e2'))
-            (TDouble, TDouble) -> pure  (Rel (e1' :>=: e2'))
-            (TString,TString) -> pure (Rel (e1' :>=: e2'))
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>=: e2'))
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>=: e2'))
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>=: e2'))
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>=: e2'))        
+        el' <- verExprL tab el
+        retBlk <- mapM (verCmd tab) blk
+        pure ((DoWhile retBlk el'))
 
-verExprL (funs,(fid,vars)) (Rel (e1 :<=: e2)) =
+verCmd tab (For a1 el a2 blk) = 
     do
-        (t1,e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1,t2) of
-            (TInt, TInt) -> pure(Rel (e1' :<=: e2'))
-            (TDouble, TInt) -> pure (Rel (e1' :<=: IntDouble e2'))
-            (TInt, TDouble) -> pure (Rel (IntDouble e1' :<=: e2'))
-            (TDouble, TDouble) -> pure  (Rel (e1' :<=: e2'))
-            (TString,TString) -> pure (Rel (e1' :<=: e2'))
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<=: e2'))
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<=: e2'))
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<=: e2'))
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<=: e2'))    
-verExprL (funs,(fid,vars)) (Rel (e1 :>: e2)) =
-    do
-        (t1,e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1,t2) of
-            (TInt, TInt) -> pure(Rel (e1' :>: e2'))
-            (TDouble, TInt) -> pure (Rel (e1' :>: IntDouble e2'))
-            (TInt, TDouble) -> pure (Rel (IntDouble e1' :>: e2'))
-            (TDouble, TDouble) -> pure  (Rel (e1' :>: e2'))
-            (TString,TString) -> pure (Rel (e1' :>: e2'))
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>: e2'))
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>: e2'))
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>: e2'))
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :>: e2'))    
-verExprL (funs,(fid,vars)) (Rel (e1 :<: e2)) =
-    do
-        (t1,e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1,t2) of
-            (TInt, TInt) -> pure(Rel (e1' :<: e2'))
-            (TDouble, TInt) -> pure (Rel (e1' :<: IntDouble e2'))
-            (TInt, TDouble) -> pure (Rel (IntDouble e1' :<: e2'))
-            (TDouble, TDouble) -> pure  (Rel (e1' :<: e2'))
-            (TString,TString) -> pure (Rel (e1' :<: e2'))
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<: e2'))
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<: e2'))
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<: e2'))
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :<: e2'))    
+        a1' <- verCmd tab a1
+        a2' <- verCmd tab a2
+        el' <- verExprL tab el
+        retBlk <- mapM (verCmd tab) blk
+        pure ((For a1' el' a2' retBlk))
 
-verExprL (funs,(fid,vars)) (Rel (e1 :/=: e2)) =
-    do
-        (t1,e1') <- verExpr (funs,(fid,vars)) e1
-        (t2,e2') <- verExpr (funs,(fid,vars)) e2
-        case (t1,t2) of
-            (TInt, TInt) -> pure(Rel (e1' :/=: e2'))
-            (TDouble, TInt) -> pure (Rel (e1' :/=: IntDouble e2'))
-            (TInt, TDouble) -> pure (Rel (IntDouble e1' :/=: e2'))
-            (TDouble, TDouble) -> pure  (Rel (e1' :/=: e2'))
-            (TString,TString) -> pure (Rel (e1' :/=: e2'))
-            (TString, _) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :/=: e2'))
-            (_, TString) -> erro("Tipo String nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :/=: e2'))
-            (TVoid, _) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :/=: e2'))
-            (_, TVoid) -> erro("Tipo Void nao compativel com operacao na funcao "++fid++"\n")(Rel (e1' :/=: e2'))    
+verExprL tab (Rel (e1 :==: e2)) = verExprLOp tab (:==:) e1 e2
+verExprL tab (Rel (e1 :/=: e2)) = verExprLOp tab (:/=:) e1 e2
+verExprL tab (Rel (e1 :>=: e2)) = verExprLOp tab (:>=:) e1 e2
+verExprL tab (Rel (e1 :<=: e2)) = verExprLOp tab (:<=:) e1 e2
+verExprL tab (Rel (e1 :>: e2)) = verExprLOp tab (:>:) e1 e2
+verExprL tab (Rel (e1 :<: e2)) = verExprLOp tab (:<:) e1 e2
 
 verExprL (funs,(fid,vars)) (e1 :&: e2) =
     do
@@ -270,7 +181,9 @@ verExprL (funs,(fid,vars)) (e1 :&: e2) =
 
 verExprL (funs,(fid,vars)) (e1 :|: e2) =
     do
-        verExprL (funs,(fid,vars)) e1 >>= \e1' -> verExprL (funs,(fid,vars)) e2 >>= \e2' -> pure (e1' :|: e2')  
+        e1' <- verExprL (funs,(fid,vars)) e1
+        e2' <- verExprL (funs,(fid,vars)) e2
+        pure (e1' :|: e2')
 
 verExprL (funs,(fid,vars)) (Not e1) =
     do
@@ -299,12 +212,11 @@ verDuplicateFun fid ((id:->:r):fs) =
 
 verDuplicateFuns [] _ = pure()
 verDuplicateFuns ((fid:->:s):fz) fs = (verDuplicateFun fid fs) >> (verDuplicateFuns fz (tail fs))
-verFuns fns ls = mapM (verBlk fns) ls
 
 verProg (Prog fns ls mainVar mainBlk) = 
     do
         verDuplicateFuns fns (tail fns)
-        fx <- verFuns fns ls
+        fx <- mapM (verBlk fns) ls
         (fi,vrs,cmds) <- verBlk fns ("main",mainVar,mainBlk)
         pure (Prog fns fx mainVar cmds)
 
