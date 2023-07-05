@@ -118,21 +118,20 @@ returnType =
 -- Commands
 listExpr = sepBy expr comma
 
-atrib = do id <- identifier; reservedOp "="; e <- expr; return (Atrib id e)
+atrib = do id <- identifier; reservedOp "="; e <- expr; return [(Atrib id e)]
 
-readSomething = do reserved "read"; id <- parens identifier; return (Leitura id)
-
+readSomething = do reserved "read"; id <- parens identifier; return [(Leitura id)]
 returnSomething =
-  try (do reserved "return" >> expr >>= \e -> return (Ret (Just e)))
-    <|> do reserved "return" >> return (Ret (Nothing))
+  try (do reserved "return" >> expr >>= \e -> return [(Ret (Just e))])
+    <|> do reserved "return" >> return [(Ret (Nothing))]
 
-printSomething = do reserved "print"; e <- parens expr; return (Imp e)
+printSomething = do reserved "print"; e <- parens expr; return [(Imp e)]
 
 elseBlock =
   do reserved "else"; blk2 <- braces cmdBlock; return (blk2)
     <|> do return []
 
-ifBlock = do reserved "if"; e <- parens exprL; blk <- braces cmdBlock; ret <- elseBlock; return (If e blk ret)
+ifBlock = do reserved "if"; e <- parens exprL; blk <- braces cmdBlock; ret <- elseBlock; return [(If e blk ret)]
 forStmt =
   do
     a <- atrib
@@ -144,23 +143,16 @@ forStmt =
 forBlock = 
   do
     reserved "for"
-    stmt <- parens forStmt
+    (a,(eL,a2))<- parens forStmt
     blk <- braces cmdBlock
-    return (For (fst stmt) (fst (snd stmt)) (snd (snd stmt)) blk)
-doWhileBlock = 
-  do
-    reserved "do"
-    blk <- braces cmdBlock
-    reserved "while"
-    e <- parens exprL
-    semi
-    return (DoWhile blk e)
+    return (a++[While eL (blk++a2)])
+
 whileBlock =
   do
     reserved "while"
     e <- parens exprL
     blk <- braces cmdBlock
-    return (While e blk)
+    return [(While e blk)]
 
 cmd =
   try (do atrib >>= \r -> semi >> return r)
@@ -169,9 +161,8 @@ cmd =
     <|> (do returnSomething >>= \r -> semi >> return r)
     <|> (do ifBlock >>= \r -> return r)
     <|> (do whileBlock >>= \r -> return r)
-    <|> (do id <- identifier; exs <- parens (listExpr); semi; return (Proc id exs))
+    <|> (do id <- identifier; exs <- parens (listExpr); semi; return [(Proc id exs)])
     <|> (do forBlock >>= \r -> return r)
-    <|> (do doWhileBlock >>= \r -> return r)
 
 parseIds = sepBy1 identifier comma
 
@@ -181,7 +172,7 @@ argConstruct t id = (id :#: t)
 
 varBlock = do vars <- many varDec; return (concat vars)
 
-cmdBlock = do cmds <- many cmd; return cmds
+cmdBlock = do cmds <- many cmd; return (concat cmds)
 
 completeBlock = do vars <- varBlock; cmds <- cmdBlock; return (vars, cmds)
 

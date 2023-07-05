@@ -36,11 +36,6 @@ int maior(int a, int b)
 	{
 		print("teste");
 	}
-	do
-	{
-		read(y);
-	}
-	while(3 > 5);
 
 	fibonacci(3);
 	print(v + f);

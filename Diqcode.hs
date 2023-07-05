@@ -16,8 +16,6 @@ type Bloco = [Comando]
 data Comando
   = If ExprL Bloco Bloco
   | While ExprL Bloco
-  |For Comando ExprL Comando Bloco
-  |DoWhile Bloco ExprL
   | Atrib Id Expr
   | Leitura Id
   | Imp Expr
