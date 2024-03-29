@@ -202,10 +202,7 @@ verDuplicateFuns ((fid:->:s):fz) fs = (verDuplicateFun fid fs) >> (verDuplicateF
 
 verProg (Prog fns ls mainVar mainBlk) = 
     do
-        verDuplicateFuns fns (tail fns)
-        fx <- mapM (verBlk fns) ls
-        (fi,vrs,cmds) <- verBlk fns ("main",mainVar,mainBlk)
-        pure (Prog fns fx mainVar cmds)
+        verDuplicateFuns fns (tail fns) >> mapM (verBlk fns) ls >>= \fx -> verBlk fns ("main",mainVar,mainBlk) >>= \(fi,vrs,cmds) -> pure (Prog fns fx mainVar cmds)
 
 main =
   do
@@ -215,3 +212,11 @@ main =
         Left v -> print v
         Right x -> do 
                     printMS(verProg x)
+{-
+
+    readFile "teste1.j--" >>= \e -> do {pure (parserE e)} >>= \syntaxTree -> case syntaxTree of 
+                                                                        Left v -> print v
+                                                                        Right x -> do 
+                                                                                    printMS(verProg x)
+
+-}
