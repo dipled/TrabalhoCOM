@@ -204,19 +204,18 @@ verProg (Prog fns ls mainVar mainBlk) =
     do
         verDuplicateFuns fns (tail fns) >> mapM (verBlk fns) ls >>= \fx -> verBlk fns ("main",mainVar,mainBlk) >>= \(fi,vrs,cmds) -> pure (Prog fns fx mainVar cmds)
 
-main =
-  do
-    e <- readFile "teste1.j--"
-    let syntaxTree = parserE e
-    case syntaxTree of 
-        Left v -> print v
-        Right x -> do 
-                    printMS(verProg x)
-{-
-
-    readFile "teste1.j--" >>= \e -> do {pure (parserE e)} >>= \syntaxTree -> case syntaxTree of 
+main = readFile "teste1.j--" >>= \e -> let syntaxTree = parserE e in case syntaxTree of 
                                                                         Left v -> print v
                                                                         Right x -> do 
                                                                                     printMS(verProg x)
+--   do
+--     e <- readFile "teste1.j--"
+--     let syntaxTree = parserE e
+--     case syntaxTree of 
+--         Left v -> print v
+--         Right x -> do 
+--                     printMS(verProg x)
 
--}
+
+
+
